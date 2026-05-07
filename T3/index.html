@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CHEM 3A — Tier 6 Skill Check (Thermochemistry)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --accent: #2a5d8f;
+    --good: #1f7a3a;
+    --bad: #b22d2d;
+    --warn: #c46c00;
+    --border: #d9d9d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 24px 20px 80px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+  input[type="text"] {
+    width: 100%; font-size: 16px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff;
+  }
+  button {
+    background: var(--accent); color: white; border: none;
+    padding: 12px 20px; border-radius: 6px; font-size: 15px;
+    font-weight: 600; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { background: #999; cursor: not-allowed; }
+  button.alt { background: #444; }
+  button.danger { background: var(--bad); }
+  button.success { background: var(--good); }
+  .timer {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600;
+  }
+  .timer.warning { background: #fff4e0; border-color: var(--warn); color: var(--warn); }
+  .timer.critical { background: #ffe5e5; border-color: var(--bad); color: var(--bad); }
+  .timer-time { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .qcard { margin-bottom: 14px; }
+  .qhead { font-weight: 700; margin-bottom: 8px; font-size: 15px; color: var(--accent); }
+  .qstem { white-space: pre-wrap; margin-bottom: 12px; font-size: 16px; }
+  .choice {
+    display: block; padding: 10px 12px; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; background: #fafaf7;
+    transition: background 0.1s;
+  }
+  .choice:hover { background: #eef2f7; }
+  .choice input { margin-right: 10px; }
+  .choice.selected { background: #dde9f5; border-color: var(--accent); }
+  .choice.correct { background: #def5e1; border-color: var(--good); }
+  .choice.incorrect { background: #f8d7d7; border-color: var(--bad); }
+  .results-summary {
+    background: #fff; border: 2px solid var(--accent);
+    border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .score { font-size: 42px; font-weight: 700; margin: 8px 0; }
+  .pass { color: var(--good); }
+  .fail { color: var(--bad); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .footer-note {
+    background: #fffce5; border-left: 4px solid var(--warn);
+    padding: 10px 14px; margin-top: 14px; font-size: 14px; border-radius: 4px;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Start screen -->
+  <div id="screen-start">
+    <h1>CHEM 3A — Tier 6 Skill Check</h1>
+    <div class="sub">Thermochemistry · 15 questions · 30 minutes · 80% to pass</div>
+
+    <div class="card">
+      <p><strong>Instructions:</strong></p>
+      <ul>
+        <li>Closed-note assessment.</li>
+        <li>You have <strong>30 minutes</strong>. Timer auto-submits at zero.</li>
+        <li>Pick the best answer. You can change answers until you submit.</li>
+        <li>When done, click <strong>Submit</strong>, then click <strong>Email Results to Prof. Gilley</strong>.</li>
+      </ul>
+      <label for="studentName">Your full name (required):</label>
+      <input id="studentName" type="text" placeholder="Last, First" autocomplete="name">
+      <div style="margin-top:14px;">
+        <button id="btnStart">Start Skill Check</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz screen -->
+  <div id="screen-quiz" class="hidden">
+    <div class="timer" id="timer">
+      <div>Skill Check in progress — <span id="studentLabel"></span></div>
+      <div class="timer-time" id="timerTime">30:00</div>
+    </div>
+    <div id="questionsContainer"></div>
+    <div class="actions">
+      <button id="btnSubmit" class="success">Submit Quiz</button>
+    </div>
+  </div>
+
+  <!-- Results screen -->
+  <div id="screen-results" class="hidden">
+    <div class="results-summary">
+      <div style="font-size:14px; color:var(--muted); letter-spacing:0.5px;">CHEM 3A · TIER 6 SKILL CHECK</div>
+      <div class="score" id="scoreDisplay">--/15</div>
+      <div id="passLabel"></div>
+      <div id="studentResultLabel" style="margin-top:10px; font-size:18px; font-weight:600;"></div>
+      <div id="timestampLabel" style="margin-top:4px; color: var(--muted); font-size:13px;"></div>
+    </div>
+    <div class="footer-note" style="text-align:center;">
+      <strong>📸 Take a screenshot of this page</strong> and show it to Prof. Gilley before you leave.
+    </div>
+    <div id="reviewContainer" style="margin-top:24px;"></div>
+  </div>
+
+</div>
+
+<script>
+const TEACHER_EMAIL = "rob.n.gilley@gmail.com";
+const QUIZ_TITLE = "CHEM 3A T-6 Skill Check (Thermochemistry)";
+const NUM_QUESTIONS = 15;
+const TIME_LIMIT_SEC = 30 * 60;
+const PASS_PERCENT = 80;
+
+const QUESTION_BANK = [{"id": 1, "category": 1, "topic": "Energy Concepts & Units", "stem": "Which of the following best distinguishes heat from temperature?", "choices": {"A": "Heat is the random motion of particles; temperature measures energy transfer", "B": "Temperature measures only molecular motion; heat measures only atomic motion", "C": "Heat and temperature are identical concepts", "D": "Temperature is the random motion of particles; heat measures energy transfer"}, "answer": "D"}, {"id": 2, "category": 1, "topic": "Energy Concepts & Units", "stem": "A book resting on a shelf has potential energy. Which statement correctly describes this energy?", "choices": {"A": "The potential energy will spontaneously convert to kinetic energy without external influence", "B": "The potential energy is equivalent to the book's weight in newtons multiplied by gravity", "C": "The potential energy exists only when the book is falling toward the ground", "D": "Potential energy depends on the book's mass, gravity, and height above a reference point"}, "answer": "D"}, {"id": 3, "category": 1, "topic": "Energy Concepts & Units", "stem": "Convert 2.5 kilocalories to kilojoules. (1 Cal = 4.184 kJ)", "choices": {"A": "10.5 kJ", "B": "1.05 kJ", "C": "0.60 kJ", "D": "104.6 kJ"}, "answer": "A"}, {"id": 4, "category": 1, "topic": "Energy Concepts & Units", "stem": "Which energy form increases when a ball is thrown upward and reaches its maximum height?", "choices": {"A": "Kinetic energy only", "B": "Potential energy", "C": "Thermal energy only", "D": "Chemical potential energy"}, "answer": "B"}, {"id": 5, "category": 1, "topic": "Energy Concepts & Units", "stem": "The first law of thermodynamics states that:", "choices": {"A": "Energy can be created in exothermic reactions only", "B": "Living systems are exempt from energy conservation", "C": "All energy eventually becomes heat", "D": "Energy is neither created nor destroyed, only transformed"}, "answer": "D"}, {"id": 6, "category": 1, "topic": "Energy Concepts & Units", "stem": "Convert 500 joules to kilocalories. (1 Cal = 4.184 kJ)", "choices": {"A": "0.12 Cal", "B": "1.20 Cal", "C": "2.09 Cal", "D": "20.9 Cal"}, "answer": "A"}, {"id": 7, "category": 1, "topic": "Energy Concepts & Units", "stem": "In an insulated system (isolated from surroundings), 80 J of heat is released by a chemical reaction. What is the change in the system's internal energy?", "choices": {"A": "+80 J", "B": "0 J (equilibrium reached)", "C": "−80 J", "D": "Cannot be determined without knowing system mass"}, "answer": "C"}, {"id": 8, "category": 1, "topic": "Energy Concepts & Units", "stem": "Which statement correctly describes chemical potential energy?", "choices": {"A": "It is stored in chemical bonds and released during reactions", "B": "It is the kinetic energy of electron motion around the nucleus", "C": "It is measured in the same units as heat capacity", "D": "It exists only in exothermic reactions"}, "answer": "A"}, {"id": 9, "category": 1, "topic": "Energy Concepts & Units", "stem": "A system absorbs 350 J of heat from the surroundings and has 200 J of work done on it. What is the change in internal energy of the system?", "choices": {"A": "−550 J", "B": "550 J", "C": "150 J", "D": "350 J"}, "answer": "B"}, {"id": 10, "category": 1, "topic": "Energy Concepts & Units", "stem": "Which of the following is an intensive property?", "choices": {"A": "Total thermal energy of a substance", "B": "Mass of a sample", "C": "Total heat released by a combustion reaction", "D": "Specific heat capacity"}, "answer": "D"}, {"id": 11, "category": 1, "topic": "Energy Concepts & Units", "stem": "Convert 3450 joules to calories. (1 cal = 4.184 J)", "choices": {"A": "0.825 cal", "B": "82.5 cal", "C": "8250 cal", "D": "825 cal"}, "answer": "D"}, {"id": 12, "category": 1, "topic": "Energy Concepts & Units", "stem": "Which scenario best illustrates the distinction between heat and temperature?", "choices": {"A": "Heat and temperature have no meaningful difference in everyday or scientific contexts", "B": "A cup of hot tea has both heat and temperature; cold water has only temperature", "C": "Hot tea and a pool at the same temperature; the pool holds more thermal energy", "D": "A thermometer measures heat, while a calorimeter measures temperature in chemical reactions"}, "answer": "C"}, {"id": 13, "category": 1, "topic": "Energy Concepts & Units", "stem": "A boulder at the top of a hill has _____ energy due to its position, and a rolling boulder has _____ energy due to its motion.", "choices": {"A": "kinetic; kinetic", "B": "thermal; chemical", "C": "potential; kinetic", "D": "chemical; thermal"}, "answer": "C"}, {"id": 14, "category": 1, "topic": "Energy Concepts & Units", "stem": "The system is defined as:", "choices": {"A": "Everything in the universe", "B": "The surroundings only", "C": "The container holding a reaction", "D": "The part of the universe being studied"}, "answer": "D"}, {"id": 15, "category": 1, "topic": "Energy Concepts & Units", "stem": "Convert 8.5 kilojoules to large Calories (kilocalories). (1 Cal = 4.184 kJ)", "choices": {"A": "0.49 Cal", "B": "35.5 Cal", "C": "2.03 Cal", "D": "202.8 Cal"}, "answer": "C"}, {"id": 16, "category": 1, "topic": "Energy Concepts & Units", "stem": "Which statement about energy transformation is correct?", "choices": {"A": "Energy can be created when plants photosynthesize using sunlight to produce sugar molecules", "B": "Energy can be destroyed in nuclear reactions when matter is converted to other forms", "C": "Sunlight is converted to chemical energy in plants, then released as heat when burned", "D": "Thermal energy cannot be converted to other forms"}, "answer": "C"}, {"id": 17, "category": 1, "topic": "Energy Concepts & Units", "stem": "A system releases 450 kJ of heat to the surroundings. From the system's perspective, q = _____ kJ.", "choices": {"A": "−450", "B": "+450", "C": "0", "D": "depends on work done"}, "answer": "A"}, {"id": 18, "category": 1, "topic": "Energy Concepts & Units", "stem": "Which type of energy is zero for a particle at rest relative to the observer?", "choices": {"A": "Potential energy", "B": "Kinetic energy", "C": "Thermal energy", "D": "Chemical potential energy"}, "answer": "B"}, {"id": 19, "category": 1, "topic": "Energy Concepts & Units", "stem": "Convert 1200 calories to kilojoules. (1 cal = 4.184 J)", "choices": {"A": "1.20 kJ", "B": "5.02 kJ", "C": "4.62 kJ", "D": "2.87 kJ"}, "answer": "B"}, {"id": 20, "category": 1, "topic": "Energy Concepts & Units", "stem": "In a closed system at constant pressure, a chemical reaction occurs with no work done. The internal energy decreases by 75 kJ. This means:", "choices": {"A": "The reaction is endothermic", "B": "The reaction is exothermic", "C": "Heat was absorbed by the system", "D": "The reaction violates the first law"}, "answer": "B"}, {"id": 21, "category": 1, "topic": "Energy Concepts & Units", "stem": "A substance's thermal energy depends on all of the following EXCEPT:", "choices": {"A": "The color of the substance", "B": "The average kinetic energy of its particles", "C": "The type of substance (composition)", "D": "The number of particles in the substance"}, "answer": "A"}, {"id": 22, "category": 1, "topic": "Energy Concepts & Units", "stem": "Which conversion factor is correct?", "choices": {"A": "1 kcal = 1000 cal", "B": "1 Cal = 1 cal", "C": "1 kJ = 1000 cal", "D": "1 cal = 4.184 Cal"}, "answer": "A"}, {"id": 23, "category": 1, "topic": "Energy Concepts & Units", "stem": "A system at constant volume absorbs 280 J of heat. What is the change in internal energy of the system?", "choices": {"A": "0 J (no work done at constant volume implies ΔU = 0)", "B": "−280 J", "C": "280 J", "D": "Cannot be determined without knowing pressure"}, "answer": "C"}, {"id": 24, "category": 1, "topic": "Energy Concepts & Units", "stem": "Which statement correctly contrasts an extensive and intensive property?", "choices": {"A": "Mass is intensive; volume is extensive", "B": "Total internal energy is extensive; specific heat is intensive", "C": "Density is extensive; temperature is intensive", "D": "Heat released is intensive; thermal energy is extensive"}, "answer": "B"}, {"id": 25, "category": 1, "topic": "Energy Concepts & Units", "stem": "A sample of copper has a thermal energy of 1500 J at 25°C. If an identical sample is heated to 50°C, its thermal energy becomes 2100 J. This increase in thermal energy demonstrates:", "choices": {"A": "Heat capacity is not defined for metals", "B": "New energy was created spontaneously by the temperature change", "C": "The copper's mass increased", "D": "The copper has gained kinetic energy in its particles"}, "answer": "D"}, {"id": 26, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Specific heat capacity is defined as:", "choices": {"A": "The total heat energy in a substance", "B": "The maximum temperature a substance can reach", "C": "The rate at which a substance cools to its surrounding temperature", "D": "The energy required to raise the temperature of 1 gram of a substance by 1°C"}, "answer": "D"}, {"id": 27, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Which substance would require the MOST energy to raise the temperature of 100 g by 10°C? (Given: c_water = 4.184 J/g·°C, c_Al = 0.897 J/g·°C, c_Fe = 0.449 J/g·°C)", "choices": {"A": "100 g aluminum", "B": "100 g water", "C": "100 g iron", "D": "All require the same energy"}, "answer": "B"}, {"id": 28, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Two identical metal bars, one aluminum and one copper, are placed in boiling water (100°C) and then moved to room temperature (25°C). Which statement is correct?", "choices": {"A": "The copper cools faster because it has lower specific heat", "B": "The aluminum cools faster because it has lower specific heat", "C": "Both cool at the same rate regardless of specific heat", "D": "Cooling rate depends only on initial temperature, not specific heat"}, "answer": "A"}, {"id": 29, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Why does water moderate Earth's climate?", "choices": {"A": "Water's low specific heat allows rapid temperature changes to buffer seasonal variations", "B": "Water's high specific heat absorbs large heat amounts with small temperature changes", "C": "Water reflects heat energy back into space and prevents excessive global warming patterns", "D": "Water's density prevents ocean mixing and stabilizes nearby coastal climates"}, "answer": "B"}, {"id": 30, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Two 100 g samples—one of aluminum (c = 0.897 J/g·°C) and one of copper (c = 0.385 J/g·°C)—receive 5000 J of heat. Which experiences the larger temperature change?", "choices": {"A": "Aluminum experiences smaller ΔT because its specific heat is higher", "B": "Copper experiences larger ΔT because its specific heat is lower", "C": "Both experience identical ΔT", "D": "Cannot be determined without final temperature"}, "answer": "B"}, {"id": 31, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Specific heat of water is 4.184 J/g·°C. This means:", "choices": {"A": "Water's density is 4.184 g/mL at standard temperature", "B": "Water releases 4.184 J per degree Celsius in cooling", "C": "The maximum heat water can absorb is 4.184 J per gram of substance", "D": "1 gram of water requires 4.184 J to raise its temperature by 1°C"}, "answer": "D"}, {"id": 32, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "A piece of lead (c = 0.128 J/g·°C) and a piece of silver (c = 0.235 J/g·°C) have the same mass. If both absorb 500 J of heat, which will reach a higher temperature?", "choices": {"A": "Lead reaches higher temperature because it has lower specific heat", "B": "Silver reaches higher temperature because it has lower specific heat", "C": "Both reach the same temperature", "D": "Lead reaches higher temperature because it is denser"}, "answer": "A"}, {"id": 33, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Why do coastal regions have more moderate temperatures than inland regions at similar latitudes?", "choices": {"A": "Salt water has lower specific heat than fresh water", "B": "Coastal areas receive more sunlight than inland regions throughout the year", "C": "Coastal water has higher specific heat, absorbing heat with little ΔT", "D": "Inland regions are at higher elevation"}, "answer": "C"}, {"id": 34, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "If a substance has a specific heat of 0.50 J/g·°C, how much energy is needed to raise 250 g of this substance by 5°C?", "choices": {"A": "62.5 J", "B": "625 J", "C": "2500 J", "D": "6250 J"}, "answer": "B"}, {"id": 35, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Comparing iron (c = 0.449 J/g·°C) and aluminum (c = 0.897 J/g·°C): if equal masses receive the same amount of heat, which shows the greater temperature increase?", "choices": {"A": "Cannot compare without knowing the heat amount", "B": "Aluminum shows greater increase because c is higher", "C": "They show equal increases", "D": "Iron shows greater increase because c is lower"}, "answer": "D"}, {"id": 36, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "The specific heat of a substance is an intensive property because:", "choices": {"A": "It is independent of the amount; a property of the material itself", "B": "It depends on the amount of substance", "C": "It is only defined for solids, not liquids or gases at standard pressure", "D": "It is the total heat capacity divided by mass"}, "answer": "A"}, {"id": 37, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "A sample of metal has a specific heat of 0.385 J/g·°C. To raise 150 g of this metal from 20°C to 35°C requires how much heat?", "choices": {"A": "865.8 J", "B": "577.5 J", "C": "1731.6 J", "D": "2597.4 J"}, "answer": "A"}, {"id": 38, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Which of the following correctly ranks substances by specific heat capacity from lowest to highest?", "choices": {"A": "Lead < Copper < Iron < Aluminum < Water", "B": "Water < Aluminum < Iron < Copper < Lead", "C": "Lead < Water < Iron < Copper < Aluminum", "D": "Iron < Lead < Aluminum < Copper < Water"}, "answer": "A"}, {"id": 39, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Water's high specific heat is due to:", "choices": {"A": "Its low molecular weight", "B": "Its boiling point being above room temperature", "C": "The strength of hydrogen bonds between water molecules", "D": "The inability of water to exist as a solid"}, "answer": "C"}, {"id": 40, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "If 2000 J of heat is added to 100 g of aluminum (c = 0.897 J/g·°C), what is the temperature change?", "choices": {"A": "11.2°C", "B": "112°C", "C": "22.3°C", "D": "223°C"}, "answer": "C"}, {"id": 41, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "A metal with low specific heat will:", "choices": {"A": "Require less heat to raise its temperature compared to one with high specific heat", "B": "Require more heat to raise its temperature than a metal with high specific heat", "C": "Never reach high temperatures", "D": "Always be in solid form"}, "answer": "A"}, {"id": 42, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Two samples of different metals with equal mass and equal specific heat capacity experience different temperature increases when receiving the same heat input. This is:", "choices": {"A": "Possible; other factors affect temperature", "B": "Possible only if initial temperatures differ", "C": "Possible only in open systems", "D": "Impossible; equal c and m mean equal ΔT"}, "answer": "D"}, {"id": 43, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Comparing equal masses of ice and water at 0°C, which has higher thermal energy?", "choices": {"A": "Ice has higher thermal energy", "B": "They have equal thermal energy", "C": "Water has higher thermal energy", "D": "Cannot be determined from given information"}, "answer": "C"}, {"id": 44, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "If a substance requires 3500 J to raise 200 g by 10°C, what is its specific heat capacity?", "choices": {"A": "0.175 J/g·°C", "B": "17.5 J/g·°C", "C": "1.75 J/g·°C", "D": "175 J/g·°C"}, "answer": "C"}, {"id": 45, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "The term \"heat capacity\" (as opposed to \"specific heat capacity\") is:", "choices": {"A": "Intensive and independent of sample size", "B": "Extensive and depends on the amount of substance", "C": "A synonym for specific heat capacity", "D": "Only defined for liquids"}, "answer": "B"}, {"id": 46, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Ocean water moderates global temperature changes because:", "choices": {"A": "Salt water has lower specific heat than fresh water", "B": "Water molecules cannot move freely in oceans due to dissolved salts and minerals", "C": "Oceans reflect sunlight more efficiently than landmasses do during the day", "D": "Large water volumes with high specific heat buffer energy with little temperature change"}, "answer": "D"}, {"id": 47, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "A calorimeter contains 500 g of water initially at 22°C. A heated piece of metal is placed in the water, and the final temperature is 28°C. Approximately how much heat was absorbed by the water? (c_water = 4.184 J/g·°C)", "choices": {"A": "25,104 J", "B": "2090 J", "C": "6276 J", "D": "12,552 J"}, "answer": "D"}, {"id": 48, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Why would a concrete driveway (low specific heat) become much hotter than a swimming pool of similar size on a sunny day?", "choices": {"A": "Concrete has more mass than water of the same volume in this scenario", "B": "Concrete absorbs more sunlight than water due to its darker, denser surface composition", "C": "Concrete's low specific heat causes a much larger temperature increase from the same heat input", "D": "Concrete is always darker in color"}, "answer": "C"}, {"id": 49, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Two substances, A and B, are identical in every way except that A has twice the specific heat of B. If both absorb the same amount of heat:", "choices": {"A": "Substance A experiences twice the temperature increase", "B": "Substance A experiences half the temperature increase", "C": "Both experience the same temperature increase", "D": "The relationship between ΔT values cannot be determined"}, "answer": "B"}, {"id": 50, "category": 2, "topic": "Specific Heat & Heat Capacity", "stem": "Lead (c = 0.128 J/g·°C) and silver (c = 0.235 J/g·°C) samples of identical mass are each cooled from 100°C to 0°C. Which releases more heat?", "choices": {"A": "Lead releases more heat", "B": "Cannot be determined without knowing mass", "C": "Both release equal heat", "D": "Silver releases more heat"}, "answer": "D"}, {"id": 51, "category": 3, "topic": "Calorimetry Calculations", "stem": "How much heat is required to raise the temperature of 75 g of copper (c = 0.385 J/g·°C) from 25°C to 85°C?", "choices": {"A": "1157.5 J", "B": "28,875 J", "C": "2310 J", "D": "1732.5 J"}, "answer": "D"}, {"id": 52, "category": 3, "topic": "Calorimetry Calculations", "stem": "A 250 g sample of iron (c = 0.449 J/g·°C) is heated from 10°C to 95°C. How much heat is absorbed?", "choices": {"A": "9540 J", "B": "4492.5 J", "C": "11,225 J", "D": "95,400 J"}, "answer": "A"}, {"id": 53, "category": 3, "topic": "Calorimetry Calculations", "stem": "If 5600 J of heat is applied to 200 g of aluminum (c = 0.897 J/g·°C), what is the change in temperature?", "choices": {"A": "15.6°C", "B": "62.4°C", "C": "31.2°C", "D": "124.8°C"}, "answer": "C"}, {"id": 54, "category": 3, "topic": "Calorimetry Calculations", "stem": "A 150 g sample of lead (c = 0.128 J/g·°C) is cooled from 85°C to 35°C. How much heat is released?", "choices": {"A": "192 J", "B": "576 J", "C": "1920 J", "D": "960 J"}, "answer": "D"}, {"id": 55, "category": 3, "topic": "Calorimetry Calculations", "stem": "How many grams of silver (c = 0.235 J/g·°C) can be heated from 15°C to 65°C using 11,750 J of heat?", "choices": {"A": "1000 g", "B": "50 g", "C": "200 g", "D": "500 g"}, "answer": "A"}, {"id": 56, "category": 3, "topic": "Calorimetry Calculations", "stem": "Convert 4350 J to kilocalories, then use that to calculate how much heat (in kJ) is needed to raise 100 g of water from 15°C to 45°C. (c_water = 4.184 J/g·°C; 1 Cal = 4.184 kJ)", "choices": {"A": "12,552 kJ", "B": "125.52 kJ", "C": "1255.2 kJ", "D": "12.552 kJ"}, "answer": "D"}, {"id": 57, "category": 3, "topic": "Calorimetry Calculations", "stem": "A piece of copper (c = 0.385 J/g·°C) with a mass of 120 g is heated by 8 kilojoules. What is its temperature change?", "choices": {"A": "17.3°C", "B": "34.6°C", "C": "346°C", "D": "173°C"}, "answer": "D"}, {"id": 58, "category": 3, "topic": "Calorimetry Calculations", "stem": "How much heat is required to raise 500 mL of water from 20°C to 95°C? (density of water ≈ 1 g/mL; c = 4.184 J/g·°C)", "choices": {"A": "15,685 J", "B": "156,850 J", "C": "209,200 J", "D": "1,568,500 J"}, "answer": "B"}, {"id": 59, "category": 3, "topic": "Calorimetry Calculations", "stem": "In a coffee-cup calorimeter, 100 g of iron at 95°C is placed in 200 g of water at 20°C. If the final temperature is 27°C (assuming no heat loss), how much heat is absorbed by the water? (c_water = 4.184 J/g·°C)", "choices": {"A": "2,510.4 J", "B": "5,859.2 J", "C": "10,460 J", "D": "20,920 J"}, "answer": "B"}, {"id": 60, "category": 3, "topic": "Calorimetry Calculations", "stem": "A 300 g aluminum block (c = 0.897 J/g·°C) at 50°C is submerged in 400 g of water (c = 4.184 J/g·°C) at 25°C. Assuming no heat loss to surroundings, what is the approximate final temperature?", "choices": {"A": "28.5°C", "B": "26.5°C", "C": "25°C", "D": "35°C"}, "answer": "A"}, {"id": 61, "category": 3, "topic": "Calorimetry Calculations", "stem": "How much heat must be removed from 50 g of copper (c = 0.385 J/g·°C) to cool it from 80°C to 20°C?", "choices": {"A": "577.5 J", "B": "2310 J", "C": "1155 J", "D": "4620 J"}, "answer": "C"}, {"id": 62, "category": 3, "topic": "Calorimetry Calculations", "stem": "A metal sample requires 3000 J of heat to raise its temperature by 25°C. If the metal has a mass of 200 g, what is its specific heat capacity?", "choices": {"A": "0.167 J/g·°C", "B": "0.375 J/g·°C", "C": "1.500 J/g·°C", "D": "0.600 J/g·°C"}, "answer": "D"}, {"id": 63, "category": 3, "topic": "Calorimetry Calculations", "stem": "Conversion problem: How many kilojoules are needed to heat 150 g of water (c = 4.184 J/g·°C) by 40°C?", "choices": {"A": "0.251 kJ", "B": "2.51 kJ", "C": "251 kJ", "D": "25.1 kJ"}, "answer": "D"}, {"id": 64, "category": 3, "topic": "Calorimetry Calculations", "stem": "A lead sinker (c = 0.128 J/g·°C) of unknown mass is cooled from 65°C to 15°C, releasing 768 J of heat. What is the mass of the sinker?", "choices": {"A": "60 g", "B": "90 g", "C": "120 g", "D": "150 g"}, "answer": "C"}, {"id": 65, "category": 3, "topic": "Calorimetry Calculations", "stem": "In a calorimeter, 250 g of water at 15°C is heated by burning a fuel sample. The final temperature is 38°C. How much heat (in kJ) was released by the fuel? (c_water = 4.184 J/g·°C)", "choices": {"A": "24.1 kJ", "B": "241 kJ", "C": "2410 kJ", "D": "24,100 kJ"}, "answer": "A"}, {"id": 66, "category": 3, "topic": "Calorimetry Calculations", "stem": "A silver ring (c = 0.235 J/g·°C) and an aluminum ring (c = 0.897 J/g·°C) have the same mass. If both are heated by 1000 J, which experiences the larger temperature increase?", "choices": {"A": "Cannot compare without knowing mass", "B": "Aluminum ring (higher c, larger ΔT)", "C": "Both experience the same increase", "D": "Silver ring (lower c, larger ΔT)"}, "answer": "D"}, {"id": 67, "category": 3, "topic": "Calorimetry Calculations", "stem": "How much heat is absorbed when 75 g of iron (c = 0.449 J/g·°C) is heated from 25°C to 105°C?", "choices": {"A": "2695 J", "B": "1347 J", "C": "5390 J", "D": "10,780 J"}, "answer": "A"}, {"id": 68, "category": 3, "topic": "Calorimetry Calculations", "stem": "A 100 g sample of an unknown metal is heated from 20°C to 60°C using 1840 J of heat. What is the metal's specific heat capacity, and which metal does this most likely correspond to?", "choices": {"A": "0.89 J/g·°C — likely aluminum", "B": "0.13 J/g·°C — likely lead", "C": "0.46 J/g·°C — likely iron", "D": "2.3 J/g·°C — likely unknown"}, "answer": "C"}, {"id": 69, "category": 3, "topic": "Calorimetry Calculations", "stem": "Water in a hot tub (500 L) is heated from 20°C to 38°C. How much heat is required? (1 L water ≈ 1 kg; c_water = 4.184 J/g·°C)", "choices": {"A": "7.5 MJ", "B": "37.7 MJ", "C": "15 MJ", "D": "75.4 MJ"}, "answer": "B"}, {"id": 70, "category": 3, "topic": "Calorimetry Calculations", "stem": "A 200 g copper sample (c = 0.385 J/g·°C) initially at 10°C absorbs 6160 J. What is its final temperature?", "choices": {"A": "80°C", "B": "100°C", "C": "90°C", "D": "110°C"}, "answer": "C"}, {"id": 71, "category": 3, "topic": "Calorimetry Calculations", "stem": "In a calorimetry experiment, 125 g of water (c = 4.184 J/g·°C) initially at 22°C is mixed with 75 g of water at 85°C. Assuming no heat loss, what is the final temperature?", "choices": {"A": "43.5°C", "B": "48.5°C", "C": "53.5°C", "D": "63.5°C"}, "answer": "B"}, {"id": 72, "category": 3, "topic": "Calorimetry Calculations", "stem": "A block of aluminum (300 g, c = 0.897 J/g·°C) at 95°C is placed on a table at room temperature (22°C). If all of its thermal energy change goes into heating the surroundings, how much heat is released?", "choices": {"A": "6,471 J", "B": "19,413 J", "C": "12,942 J", "D": "25,884 J"}, "answer": "B"}, {"id": 73, "category": 3, "topic": "Calorimetry Calculations", "stem": "How many grams of water (c = 4.184 J/g·°C) at 100°C can be cooled to 25°C using 12,552 J of heat removal?", "choices": {"A": "80 g", "B": "60 g", "C": "40 g", "D": "100 g"}, "answer": "C"}, {"id": 74, "category": 3, "topic": "Calorimetry Calculations", "stem": "A 50 g sample of lead (c = 0.128 J/g·°C) at 100°C and a 50 g sample of aluminum (c = 0.897 J/g·°C) at 20°C are placed in contact. Which statement is correct about the heat flow and final temperature?", "choices": {"A": "Lead loses heat; aluminum gains heat; final temperature is approximately 30°C", "B": "Lead loses heat; aluminum gains heat; final temperature is approximately 45°C", "C": "Aluminum loses heat; lead gains heat; cannot determine final temperature", "D": "Both samples reach 60°C regardless of specific heats"}, "answer": "A"}, {"id": 75, "category": 3, "topic": "Calorimetry Calculations", "stem": "Convert 2500 cal to kilojoules, then calculate how much heat (in kcal) is needed to raise 200 g of water from 10°C to 50°C. (1 cal = 4.184 J; c_water = 4.184 J/g·°C)", "choices": {"A": "1.6 kcal", "B": "16 kcal", "C": "160 kcal", "D": "1600 kcal"}, "answer": "B"}, {"id": 76, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "In an exothermic reaction, the sign of q for the reaction is:", "choices": {"A": "Positive (q > 0)", "B": "Negative (q < 0)", "C": "Zero (q = 0)", "D": "Undefined (reaction must be endothermic)"}, "answer": "B"}, {"id": 77, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "When ice melts, the ice absorbs heat from surroundings. From the ice's perspective, q = _____.", "choices": {"A": "Negative (heat is absorbed, not released)", "B": "Depends on surrounding temperature", "C": "Zero", "D": "Positive"}, "answer": "D"}, {"id": 78, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "A hot piece of iron is placed in cold water. Which statement is correct?", "choices": {"A": "q_iron is positive; q_water is negative", "B": "q_iron is negative; q_water is positive", "C": "Both q values are positive", "D": "Both q values are negative"}, "answer": "B"}, {"id": 79, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "In a calorimeter at equilibrium, the heat released by the hot object equals the heat absorbed by the cold object. This demonstrates:", "choices": {"A": "That exothermic reactions are always hotter", "B": "That the calorimeter must be insulated", "C": "That the cold object has lower specific heat", "D": "The law of conservation of energy; q_hot = −q_cold"}, "answer": "D"}, {"id": 80, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "When ammonium nitrate dissolves in water, the solution becomes noticeably cold. This means:", "choices": {"A": "The dissolution violates energy conservation laws under these conditions", "B": "q for the dissolution is negative (exothermic, releases heat)", "C": "q for the dissolution is positive (endothermic, absorbs heat from solution)", "D": "No energy is transferred during dissolution at room temperature"}, "answer": "C"}, {"id": 81, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "A coffee cup calorimeter contains 200 g of water at 25°C. A piece of hot metal at 95°C is added, and the final temperature becomes 32°C. Which statement correctly describes the heat transfer?", "choices": {"A": "q_water > 0 (absorbs heat); q_metal < 0 (releases heat); q_water = −q_metal", "B": "q_water = negative (loses heat); q_metal = positive (gains heat)", "C": "q_water = q_metal (same magnitude and sign)", "D": "q_water = 0; all heat stays with the metal and none transfers to the water"}, "answer": "A"}, {"id": 82, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "An endothermic process has:", "choices": {"A": "q > 0 for the process", "B": "q < 0 for the process", "C": "q = 0 always", "D": "q value that depends only on mass"}, "answer": "A"}, {"id": 83, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "When sodium hydroxide dissolves in water, the solution becomes hot. From the dissolution's perspective, q is:", "choices": {"A": "Positive", "B": "Zero", "C": "Negative", "D": "Dependent on water's temperature"}, "answer": "C"}, {"id": 84, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "In a calorimetry experiment, the heat lost by a hot substance must equal the heat gained by a cold substance (assuming an isolated system). This is written as:", "choices": {"A": "q_hot = q_cold (same sign and magnitude)", "B": "q_hot + q_cold = 0", "C": "q_hot × q_cold = 0", "D": "q_hot > q_cold always"}, "answer": "B"}, {"id": 85, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "A system releases 450 kJ to the surroundings. What is q for the system and what is q for the surroundings?", "choices": {"A": "q_system = +450 kJ; q_surroundings = −450 kJ", "B": "q_system = −450 kJ; q_surroundings = −450 kJ", "C": "q_system = −450 kJ; q_surroundings = +450 kJ", "D": "Both equal +450 kJ"}, "answer": "C"}, {"id": 86, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "In a coffee-cup calorimeter at 25°C, 100 g of water is mixed with a salt that produces an endothermic dissolution. The final temperature drops to 18°C. Which is correct?", "choices": {"A": "q_water < 0 (loses heat); q_dissolution > 0 (endothermic)", "B": "q_water > 0; q_dissolution < 0", "C": "Both q values are negative regardless of system definitions", "D": "q_water = 0 because calorimeter is insulated"}, "answer": "A"}, {"id": 87, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "A 50 g piece of aluminum (c = 0.897 J/g·°C) at 80°C is placed in 100 g of water (c = 4.184 J/g·°C) at 20°C. Assuming no heat loss, which substance undergoes the larger temperature change (|ΔT|)?", "choices": {"A": "Cannot be determined without knowing the final temperature", "B": "Water undergoes the larger |ΔT| because it has more mass than the aluminum sample", "C": "Both undergo identical |ΔT| values because |q_Al| = |q_water|", "D": "Aluminum undergoes the larger |ΔT| because it has lower heat capacity (m × c)"}, "answer": "D"}, {"id": 88, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "The sign convention for heat is:", "choices": {"A": "q > 0 means the substance releases heat (exothermic)", "B": "q < 0 means the substance absorbs heat", "C": "q is always positive in exothermic reactions", "D": "q > 0 means heat is absorbed by the substance (endothermic)"}, "answer": "D"}, {"id": 89, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "In an isolated calorimeter, a hot metal and cold water reach thermal equilibrium. If the water's temperature increases by 5°C, and the metal's temperature decreases by 15°C:", "choices": {"A": "The metal released more heat than the water absorbed", "B": "Heat was created spontaneously by friction during the experiment", "C": "The water absorbed exactly the heat the metal released; q_metal = −q_water", "D": "The system violates conservation of energy"}, "answer": "C"}, {"id": 90, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "A reaction in a coffee-cup calorimeter causes the solution temperature to rise from 22°C to 28°C. From the reaction's perspective:", "choices": {"A": "q < 0 (heat released; exothermic)", "B": "q > 0 (heat absorbed; endothermic)", "C": "q = 0 (no net heat change)", "D": "The sign depends on which substance reacted"}, "answer": "A"}, {"id": 91, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "When comparing q values in a two-substance heat transfer:", "choices": {"A": "The substance with higher specific heat has larger |q|", "B": "q_substance1 = q_substance2 (same sign and magnitude)", "C": "|q_substance1| always equals |q_substance2| in an isolated system", "D": "The magnitudes depend on which substance is hotter initially"}, "answer": "C"}, {"id": 92, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "A 200 g sample of copper (c = 0.385 J/g·°C) initially at 95°C is placed in an insulated container. It cools to 25°C. What is q for the copper?", "choices": {"A": "−5390 J", "B": "+5390 J", "C": "+10,780 J", "D": "Cannot be calculated without knowing surrounding material"}, "answer": "A"}, {"id": 93, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "In a calorimetry experiment with a hot metal in cold water, if the metal loses 2000 J:", "choices": {"A": "The water gains 2000 J; q_metal = +2000, q_water = −2000", "B": "The water loses 2000 J; q_metal = +2000, q_water = −2000", "C": "The water gains 2000 J; q_metal = −2000, q_water = +2000", "D": "Net heat change is zero immediately"}, "answer": "C"}, {"id": 94, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "An endothermic dissolution process absorbs 3500 J. From the surroundings' perspective:", "choices": {"A": "q_surroundings = +3500 J (surroundings lose heat)", "B": "q_surroundings = 0 (surroundings unaffected)", "C": "q_surroundings = −3500 J (surroundings lose heat to the process)", "D": "q_surroundings = +7000 J (twice the magnitude of the system)"}, "answer": "C"}, {"id": 95, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "The total heat in an isolated system is conserved. If substance A releases 750 J:", "choices": {"A": "Substance B absorbs 1500 J", "B": "Substance B releases 750 J as well", "C": "Heat is destroyed in the system", "D": "Substance B must absorb 750 J; q_total = 0"}, "answer": "D"}, {"id": 96, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "A student places a heated piece of iron (95°C) in a calorimeter with 150 g of water at 20°C. The final temperature is 28°C. For the water (c = 4.184 J/g·°C):", "choices": {"A": "q_water = −2510 J (releases heat)", "B": "q_water = +2510 J", "C": "q_water = −5020 J", "D": "q_water = 0 (equilibrium reached)"}, "answer": "B"}, {"id": 97, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "When a substance's temperature increases due to heat absorption:", "choices": {"A": "q is negative (heat absorbed)", "B": "q is positive (heat absorbed)", "C": "q is zero (no change)", "D": "The sign depends on whether the substance is pure"}, "answer": "B"}, {"id": 98, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "In a bomb calorimeter, a fuel completely combusts, releasing 25,000 J to the water surrounding it. What is q for the fuel?", "choices": {"A": "q_fuel = −25,000 J", "B": "q_fuel = +25,000 J", "C": "q_fuel = 0 (complete combustion)", "D": "q_fuel = +50,000 J"}, "answer": "A"}, {"id": 99, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "A piece of lead (c = 0.128 J/g·°C, mass = 300 g) cools from 80°C to 30°C. Calculate q for the lead.", "choices": {"A": "+9,600 J (positive indicates heat absorbed)", "B": "−9,600 J (negative indicates heat released)", "C": "−19,200 J", "D": "+1,920 J"}, "answer": "B"}, {"id": 100, "category": 4, "topic": "Sign Convention & Heat Transfer", "stem": "In an isolated system, one substance undergoes an endothermic change while another undergoes an exothermic change. Which is true?", "choices": {"A": "Both q values are positive regardless of reaction direction or thermodynamics", "B": "The exothermic substance's |q| is smaller", "C": "Energy is either created or destroyed", "D": "The endothermic q is positive; the exothermic q is negative; their magnitudes are equal"}, "answer": "D"}, {"id": 101, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "Melting ice at 0°C is an _____ process because the ice _____ heat from surroundings.", "choices": {"A": "exothermic; absorbs", "B": "endothermic; absorbs", "C": "endothermic; releases", "D": "exothermic; releases"}, "answer": "B"}, {"id": 102, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "The combustion of natural gas is:", "choices": {"A": "Endothermic; products have higher energy than reactants", "B": "Neither endothermic nor exothermic", "C": "Endothermic; releases heat (contradiction)", "D": "Exothermic; products have lower energy than reactants"}, "answer": "D"}, {"id": 103, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "For an exothermic reaction, ΔH is:", "choices": {"A": "Positive (ΔH > 0)", "B": "Zero", "C": "Negative (ΔH < 0)", "D": "Depends on temperature only"}, "answer": "C"}, {"id": 104, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "Evaporation of water from sweat on skin is:", "choices": {"A": "Endothermic; skin cools down", "B": "Exothermic; skin warms up", "C": "Neither endothermic nor exothermic", "D": "Exothermic; skin cools down"}, "answer": "A"}, {"id": 105, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "In an endothermic process:", "choices": {"A": "Products have lower energy than reactants; surroundings warm up", "B": "The process always requires a catalyst", "C": "Reactants and products have equal energy", "D": "Products have higher energy than reactants; surroundings cool down"}, "answer": "D"}, {"id": 106, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "Condensation of steam to liquid water is:", "choices": {"A": "Endothermic; absorbs heat", "B": "Exothermic; absorbs heat", "C": "Endothermic; releases heat", "D": "Exothermic; releases heat"}, "answer": "D"}, {"id": 107, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "When ammonium nitrate (NH₄NO₃) dissolves in water, the solution becomes very cold. This is:", "choices": {"A": "Exothermic; ΔH < 0", "B": "Endothermic; ΔH > 0", "C": "Neither endothermic nor exothermic", "D": "Exothermic; ΔH > 0"}, "answer": "B"}, {"id": 108, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "The neutralization of a strong acid with a strong base is typically:", "choices": {"A": "Exothermic; solution temperature increases", "B": "Endothermic; solution temperature decreases", "C": "Endothermic; solution temperature increases", "D": "Neither; it depends on the acid chosen"}, "answer": "A"}, {"id": 109, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "A chemical reaction has ΔH = +45 kJ. This reaction is:", "choices": {"A": "Endothermic and absorbs 45 kJ from surroundings", "B": "Exothermic and releases 45 kJ to surroundings", "C": "Exothermic and absorbs 45 kJ", "D": "Impossible because ΔH cannot be positive"}, "answer": "A"}, {"id": 110, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "In an exothermic reaction, the surroundings' temperature tends to:", "choices": {"A": "Decrease (surroundings absorb heat)", "B": "Increase (surroundings receive heat from reaction)", "C": "Remain constant (exothermic reactions are isolated)", "D": "Increase then decrease"}, "answer": "B"}, {"id": 111, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "Boiling water at constant pressure (converting liquid to gas) is:", "choices": {"A": "Exothermic; heat is released", "B": "Endothermic; heat is released", "C": "Endothermic; heat is absorbed", "D": "Neither; temperature doesn't change during boiling"}, "answer": "C"}, {"id": 112, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "For an endothermic reaction, ΔH is:", "choices": {"A": "Negative (ΔH < 0)", "B": "Zero", "C": "Positive (ΔH > 0)", "D": "Depends on whether a catalyst is present"}, "answer": "C"}, {"id": 113, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "Freezing water to ice at 0°C is:", "choices": {"A": "Endothermic; absorbs heat", "B": "Exothermic; releases heat", "C": "Endothermic; releases heat", "D": "Neither endothermic nor exothermic"}, "answer": "B"}, {"id": 114, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "A reaction absorbs 85 kJ. This reaction is:", "choices": {"A": "Exothermic; ΔH = −85 kJ", "B": "The sign of ΔH depends on initial temperature", "C": "Exothermic; ΔH = +85 kJ", "D": "Endothermic; ΔH = +85 kJ"}, "answer": "D"}, {"id": 115, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "The rusting of iron (iron combining with oxygen) is:", "choices": {"A": "Exothermic; energy is released", "B": "Endothermic; energy is absorbed", "C": "Endothermic; energy is released", "D": "Neither; rusting is not a chemical reaction"}, "answer": "A"}, {"id": 116, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "When an ice pack cools, the substance inside undergoes an _____ process because it _____ heat from surroundings.", "choices": {"A": "exothermic; absorbs (contradiction)", "B": "exothermic; releases", "C": "endothermic; absorbs", "D": "endothermic; releases"}, "answer": "C"}, {"id": 117, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "Combustion reactions are typically:", "choices": {"A": "Endothermic; ΔH > 0", "B": "Exothermic; ΔH < 0", "C": "Neither endothermic nor exothermic", "D": "Sometimes endothermic, sometimes exothermic"}, "answer": "B"}, {"id": 118, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "In an exothermic process:", "choices": {"A": "Reactants have lower energy than products", "B": "Energy is always absorbed from the surroundings", "C": "Reactants and products have equal energy at all temperatures", "D": "Reactants have higher energy than products; energy is released"}, "answer": "D"}, {"id": 119, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "A \"cold pack\" (like those used for injuries) typically contains ammonium nitrate. When activated, it becomes very cold. The dissolution process is:", "choices": {"A": "Endothermic; absorbs heat from the pack and surroundings", "B": "Exothermic; releases heat", "C": "Exothermic; absorbs heat from the surrounding atmosphere", "D": "Neither endothermic nor exothermic"}, "answer": "A"}, {"id": 120, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "For the reaction: C(s) + O₂(g) → CO₂(g), ΔH = −393 kJ\nThis reaction is:", "choices": {"A": "Endothermic because oxygen is a gas at room temperature", "B": "Neither; the sign of ΔH is ambiguous", "C": "Endothermic because carbon is involved", "D": "Exothermic because ΔH is negative; it releases 393 kJ"}, "answer": "D"}, {"id": 121, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "Sweating cools the body because water evaporation from skin is:", "choices": {"A": "Endothermic and absorbs heat energy from the skin", "B": "Exothermic and warms the skin upon contact", "C": "Exothermic and cools the skin", "D": "Neither endothermic nor exothermic"}, "answer": "A"}, {"id": 122, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "Which of the following is an endothermic process?", "choices": {"A": "Melting of ice", "B": "Freezing of water", "C": "Combustion of wood", "D": "Condensation of steam"}, "answer": "A"}, {"id": 123, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "A reaction releases 250 kJ. The value of ΔH and the classification are:", "choices": {"A": "ΔH = +250 kJ (endothermic)", "B": "ΔH = 0 kJ (isothermal)", "C": "ΔH = −250 kJ (exothermic)", "D": "ΔH = −250 kJ (endothermic)"}, "answer": "C"}, {"id": 124, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "When a candle burns, the surroundings warm up. This indicates the combustion reaction is:", "choices": {"A": "Endothermic; ΔH > 0 because heat is absorbed from the surroundings", "B": "Exothermic; ΔH < 0; products have lower energy than reactants", "C": "Exothermic; ΔH > 0 because heat is released", "D": "Endothermic; ΔH < 0"}, "answer": "B"}, {"id": 125, "category": 5, "topic": "Endothermic & Exothermic Processes", "stem": "A physical change that is endothermic includes:", "choices": {"A": "Condensation of water vapor", "B": "Freezing of a liquid", "C": "Dissolving sugar in water or melting ice", "D": "All of the above are exothermic"}, "answer": "C"}, {"id": 126, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An energy diagram shows reactants at 400 kJ and products at 250 kJ (both measured from a reference level). What is ΔH?", "choices": {"A": "+400 kJ", "B": "+150 kJ", "C": "−150 kJ", "D": "−250 kJ"}, "answer": "C"}, {"id": 127, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "In an energy diagram, if the products are higher in energy than reactants, the reaction is:", "choices": {"A": "Exothermic; ΔH < 0", "B": "Endothermic; ΔH > 0", "C": "Exothermic; ΔH > 0", "D": "Impossible on a proper energy diagram"}, "answer": "B"}, {"id": 128, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An energy diagram shows reactants at 500 kJ and products at 800 kJ. This reaction:", "choices": {"A": "Releases 300 kJ to surroundings; ΔH = −300 kJ", "B": "Absorbs 500 kJ from surroundings", "C": "Absorbs 300 kJ from surroundings; ΔH = +300 kJ", "D": "Has ΔH that cannot be determined from the diagram"}, "answer": "C"}, {"id": 129, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "The activation energy (Ea) on an energy diagram is:", "choices": {"A": "The energy of the products", "B": "The energy difference between reactants and products (ΔH)", "C": "The energy released by the reaction", "D": "The minimum energy required to reach the transition state"}, "answer": "D"}, {"id": 130, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "Looking at an energy diagram, which feature indicates an exothermic reaction?", "choices": {"A": "Reactants are higher in energy than products", "B": "Activation energy is very high", "C": "Products are higher in energy than reactants", "D": "The activation energy equals ΔH"}, "answer": "A"}, {"id": 131, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "In an energy diagram, the \"transition state\" or \"activated complex\" is represented by:", "choices": {"A": "The energy level of reactants", "B": "The energy level of products", "C": "The horizontal baseline (zero energy)", "D": "The peak of the reaction pathway"}, "answer": "D"}, {"id": 132, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "A catalyst appears on an energy diagram as:", "choices": {"A": "A reduction in the height of the reactants", "B": "A lower activation energy peak, while ΔH remains unchanged", "C": "A reduction in the height of the products", "D": "An increase in the height of the transition state"}, "answer": "B"}, {"id": 133, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An energy diagram shows:\n- Reactants at energy level 100 kJ\n- Transition state (peak) at 275 kJ\n- Products at energy level 150 kJ\nWhat is the activation energy (Ea) for the forward reaction?", "choices": {"A": "50 kJ", "B": "125 kJ", "C": "175 kJ", "D": "275 kJ"}, "answer": "C"}, {"id": 134, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An energy diagram shows:\n- Reactants at 300 kJ\n- Products at 200 kJ\n- Transition state at 450 kJ\nThe value of ΔH and whether the reaction is endothermic or exothermic:", "choices": {"A": "ΔH = −100 kJ (exothermic)", "B": "ΔH = +100 kJ (endothermic)", "C": "ΔH = +250 kJ (endothermic)", "D": "ΔH = −250 kJ (exothermic)"}, "answer": "A"}, {"id": 135, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "For an exothermic reaction with Ea,forward = 120 kJ and ΔH = −80 kJ, what is Ea,reverse?", "choices": {"A": "80 kJ", "B": "40 kJ", "C": "120 kJ", "D": "200 kJ"}, "answer": "B"}, {"id": 136, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An exothermic reaction has Ea = 200 kJ and ΔH = −50 kJ. What is Ea,reverse?", "choices": {"A": "250 kJ", "B": "200 kJ", "C": "150 kJ", "D": "Cannot be determined from this information"}, "answer": "C"}, {"id": 137, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "In an energy diagram showing an uncatalyzed and catalyzed pathway:", "choices": {"A": "The catalyzed pathway has lower activation energy", "B": "The catalyzed pathway has higher activation energy", "C": "Both pathways have identical ΔH and Ea", "D": "The catalyst increases ΔH"}, "answer": "A"}, {"id": 138, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An energy diagram shows reactants at 50 kJ and products at 80 kJ. If a catalyst is added:", "choices": {"A": "ΔH increases to 45 kJ", "B": "ΔH remains +30 kJ; Ea is lowered", "C": "ΔH becomes negative", "D": "The diagram cannot be used with a catalyst"}, "answer": "B"}, {"id": 139, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "For an endothermic reaction with Ea = 180 kJ and ΔH = +60 kJ:", "choices": {"A": "The reverse reaction has no activation energy", "B": "Ea,reverse = 180 kJ", "C": "Ea,reverse = 240 kJ", "D": "Ea,reverse = 120 kJ"}, "answer": "D"}, {"id": 140, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An energy diagram feature that does NOT change when a catalyst is introduced:", "choices": {"A": "Activation energy required to start the forward reaction", "B": "ΔH (energy difference between reactants and products)", "C": "Height of the transition state", "D": "All features change with a catalyst"}, "answer": "B"}, {"id": 141, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "Looking at an energy diagram, if reactants are at 600 kJ and products are at 400 kJ:", "choices": {"A": "The reaction is endothermic; ΔH = +200 kJ", "B": "The reaction is exothermic; ΔH = −200 kJ", "C": "The reaction is exothermic; ΔH = +200 kJ", "D": "ΔH cannot be read from this diagram"}, "answer": "B"}, {"id": 142, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "In an energy diagram, the difference between the transition state energy and the reactant energy equals:", "choices": {"A": "ΔH", "B": "The activation energy for the reverse reaction", "C": "The activation energy for the forward reaction", "D": "The enthalpy of the products"}, "answer": "C"}, {"id": 143, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An energy diagram shows two pathways: one with a high peak (uncatalyzed) and one with a lower peak (catalyzed). Which statement is correct?", "choices": {"A": "The catalyzed reaction releases more energy", "B": "The catalyzed pathway increases the number of products", "C": "The catalyzed reaction has larger ΔH", "D": "The catalyzed reaction reaches products faster due to lower Ea"}, "answer": "D"}, {"id": 144, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "For a reaction with Ea = 150 kJ (forward) and Ea = 110 kJ (reverse):", "choices": {"A": "Cannot be determined", "B": "ΔH = −40 kJ (exothermic)", "C": "ΔH = 260 kJ", "D": "ΔH = +40 kJ (endothermic)"}, "answer": "D"}, {"id": 145, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An energy diagram of a reaction shows that the peak (transition state) is much higher than both reactants and products. This indicates:", "choices": {"A": "The reaction requires significant activation energy", "B": "The reaction is highly exothermic", "C": "The reaction is highly endothermic", "D": "The reaction requires a catalyst to proceed at any rate"}, "answer": "A"}, {"id": 146, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "In an energy diagram, if ΔH = −100 kJ and Ea = 200 kJ:", "choices": {"A": "The reaction is endothermic; products are higher than reactants", "B": "Ea and ΔH are unrelated", "C": "The reaction is endothermic; products are lower than reactants", "D": "The reaction is exothermic; products are lower than reactants"}, "answer": "D"}, {"id": 147, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "Comparing two reactions on energy diagrams:\n- Reaction A: Ea = 150 kJ, ΔH = −50 kJ\n- Reaction B: Ea = 100 kJ, ΔH = −50 kJ\nWhich statement is correct?", "choices": {"A": "Reaction B proceeds faster due to lower Ea; both release same energy", "B": "Reaction A releases more energy", "C": "Reaction B is less exothermic and releases less total energy", "D": "Both reactions require identical conditions"}, "answer": "A"}, {"id": 148, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "An energy diagram shows a reaction with Ea = 180 kJ (forward) and Ea,reverse = 220 kJ. The reaction is:", "choices": {"A": "Endothermic; ΔH = +40 kJ", "B": "Exothermic; ΔH = −40 kJ", "C": "Endothermic; ΔH = −40 kJ", "D": "Exothermic; ΔH = +220 kJ"}, "answer": "A"}, {"id": 149, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "Two reactions have identical ΔH = −75 kJ but different Ea values (Reaction X: Ea = 80 kJ; Reaction Y: Ea = 150 kJ). Which is true?", "choices": {"A": "Reaction X is more exothermic and releases more total energy", "B": "Reaction Y releases more heat", "C": "Reaction X proceeds faster at room temperature due to lower Ea", "D": "Reaction Y produces more products"}, "answer": "C"}, {"id": 150, "category": 6, "topic": "Energy Diagrams & ΔH Interpretation", "stem": "In an energy diagram, the vertical distance from the energy level of reactants to the transition state represents:", "choices": {"A": "ΔH (the overall enthalpy change between products and reactants)", "B": "The reverse activation energy", "C": "The activation energy for the forward reaction", "D": "The total energy of the system"}, "answer": "C"}];
+
+// --- Helpers ---
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandomQuestions(bank, n) {
+  return shuffle(bank).slice(0, n);
+}
+
+function buildQuizQuestions() {
+  const picked = pickRandomQuestions(QUESTION_BANK, NUM_QUESTIONS);
+  return picked.map((q, idx) => {
+    const letters = ["A","B","C","D"];
+    const correctText = q.choices[q.answer];
+    // Shuffle the choices: build array of {text, isCorrect}, shuffle, reassign letters
+    const choicesArr = letters.map(L => ({ text: q.choices[L], isCorrect: L === q.answer }));
+    const shuffled = shuffle(choicesArr);
+    const newChoices = {};
+    let newCorrect = null;
+    shuffled.forEach((c, i) => {
+      const newL = letters[i];
+      newChoices[newL] = c.text;
+      if (c.isCorrect) newCorrect = newL;
+    });
+    return {
+      displayIndex: idx + 1,
+      bankId: q.id,
+      topic: q.topic,
+      stem: q.stem,
+      choices: newChoices,
+      correct: newCorrect,
+      selected: null,
+    };
+  });
+}
+
+// --- State ---
+let quiz = [];
+let timerInterval = null;
+let endTime = null;
+let submitted = false;
+let studentName = "";
+
+// --- Render ---
+function renderQuestions() {
+  const c = document.getElementById("questionsContainer");
+  c.innerHTML = "";
+  quiz.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    card.id = "q-" + qi;
+    let html = '<div class="qhead">Question ' + q.displayIndex + ' of ' + NUM_QUESTIONS + '</div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      const id = "q" + qi + "_" + L;
+      html += '<label class="choice" data-q="' + qi + '" data-l="' + L + '">';
+      html += '<input type="radio" name="q' + qi + '" value="' + L + '" id="' + id + '"> ';
+      html += '<strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]);
+      html += '</label>';
+    });
+    card.innerHTML = html;
+    c.appendChild(card);
+  });
+  c.addEventListener("change", e => {
+    if (e.target && e.target.type === "radio") {
+      const qi = parseInt(e.target.name.slice(1), 10);
+      quiz[qi].selected = e.target.value;
+      // Highlight selected
+      const labels = document.querySelectorAll('label.choice[data-q="' + qi + '"]');
+      labels.forEach(lb => lb.classList.toggle("selected", lb.getAttribute("data-l") === e.target.value));
+    }
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+// --- Timer ---
+function startTimer() {
+  endTime = Date.now() + TIME_LIMIT_SEC * 1000;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+}
+function updateTimer() {
+  const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById("timerTime").textContent =
+    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  const t = document.getElementById("timer");
+  t.classList.toggle("warning", remaining <= 300 && remaining > 60);
+  t.classList.toggle("critical", remaining <= 60);
+  if (remaining <= 0 && !submitted) {
+    clearInterval(timerInterval);
+    submitQuiz(true);
+  }
+}
+
+// --- Submit / score ---
+function submitQuiz(autoSubmitted) {
+  if (submitted) return;
+  // Check unanswered
+  const unanswered = quiz.filter(q => !q.selected).length;
+  if (!autoSubmitted && unanswered > 0) {
+    if (!confirm("You have " + unanswered + " unanswered question(s). Submit anyway?")) return;
+  }
+  submitted = true;
+  if (timerInterval) clearInterval(timerInterval);
+
+  let correct = 0;
+  quiz.forEach(q => { if (q.selected === q.correct) correct++; });
+  const pct = Math.round((correct / NUM_QUESTIONS) * 100);
+  const passed = pct >= PASS_PERCENT;
+
+  // Show results screen
+  document.getElementById("screen-quiz").classList.add("hidden");
+  const rs = document.getElementById("screen-results");
+  rs.classList.remove("hidden");
+  document.getElementById("scoreDisplay").textContent = correct + "/" + NUM_QUESTIONS + "  (" + pct + "%)";
+  document.getElementById("scoreDisplay").className = "score " + (passed ? "pass" : "fail");
+  document.getElementById("passLabel").innerHTML = passed
+    ? '<strong style="color:var(--good);">PASS — meets 80% standard</strong>'
+    : '<strong style="color:var(--bad);">DID NOT PASS — complete remediation before retake</strong>';
+  document.getElementById("studentResultLabel").textContent =
+    studentName + (autoSubmitted ? " · auto-submitted (time expired)" : "");
+  const now = new Date();
+  const ts = now.toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+  document.getElementById("timestampLabel").textContent = "Completed: " + ts;
+
+  // Build review
+  const rev = document.getElementById("reviewContainer");
+  rev.innerHTML = "<h2 style='margin-top:0;'>Question Review</h2>";
+  quiz.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    let html = '<div class="qhead">Q' + q.displayIndex + ' &middot; <span style="color:var(--muted);font-weight:400;">Topic: ' + escapeHtml(q.topic) + ' &middot; Bank #' + q.bankId + '</span></div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      let cls = "choice";
+      if (L === q.correct) cls += " correct";
+      if (L === q.selected && q.selected !== q.correct) cls += " incorrect";
+      let mark = "";
+      if (L === q.correct) mark = " ✓ correct";
+      if (L === q.selected && q.selected !== q.correct) mark = " ✗ your answer";
+      else if (L === q.selected && q.selected === q.correct) mark = " ✓ your answer";
+      html += '<div class="' + cls + '"><strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]) + '<em style="color:var(--muted);">' + mark + '</em></div>';
+    });
+    if (!q.selected) {
+      html += '<div style="color:var(--bad); font-size:13px; margin-top:6px;"><em>Not answered</em></div>';
+    }
+    card.innerHTML = html;
+    rev.appendChild(card);
+  });
+
+  // Stash data for email button
+  window.__quizResult = {
+    name: studentName,
+    correct: correct,
+    pct: pct,
+    passed: passed,
+    autoSubmitted: !!autoSubmitted,
+    answers: quiz.map(q => ({
+      bankId: q.bankId,
+      topic: q.topic,
+      selected: q.selected,
+      correct: q.correct,
+      wasCorrect: q.selected === q.correct,
+    })),
+  };
+
+  window.scrollTo(0, 0);
+}
+
+function buildEmailBody(r) {
+  const lines = [];
+  lines.push("Student: " + r.name);
+  lines.push("Quiz: " + QUIZ_TITLE);
+  lines.push("Date: " + new Date().toLocaleString());
+  lines.push("Score: " + r.correct + "/" + NUM_QUESTIONS + " (" + r.pct + "%)");
+  lines.push("Status: " + (r.passed ? "PASS" : "DID NOT PASS"));
+  if (r.autoSubmitted) lines.push("Note: AUTO-SUBMITTED (time expired)");
+  lines.push("");
+  lines.push("Answers (Q-bank-id | selected | correct | result):");
+  r.answers.forEach((a, i) => {
+    lines.push((i+1).toString().padStart(2) + ". Bank#" + a.bankId +
+               " | sel=" + (a.selected || "—") +
+               " | ans=" + a.correct +
+               " | " + (a.wasCorrect ? "✓" : "✗") +
+               " | " + a.topic);
+  });
+  return lines.join("\n");
+}
+
+function emailResults() {
+  const r = window.__quizResult;
+  if (!r) return;
+  const subject = "[T6 Skill Check] " + r.name + " — " + r.correct + "/" + NUM_QUESTIONS + " (" + r.pct + "%) " + (r.passed ? "PASS" : "FAIL");
+  const body = buildEmailBody(r);
+  const url = "mailto:" + encodeURIComponent(TEACHER_EMAIL) +
+              "?subject=" + encodeURIComponent(subject) +
+              "&body=" + encodeURIComponent(body);
+  window.location.href = url;
+}
+
+// --- Wire up ---
+document.getElementById("btnStart").addEventListener("click", () => {
+  const nm = document.getElementById("studentName").value.trim();
+  if (!nm) { alert("Please enter your full name."); return; }
+  studentName = nm;
+  document.getElementById("studentLabel").textContent = nm;
+  quiz = buildQuizQuestions();
+  document.getElementById("screen-start").classList.add("hidden");
+  document.getElementById("screen-quiz").classList.remove("hidden");
+  renderQuestions();
+  startTimer();
+  // Warn on close/refresh
+  window.addEventListener("beforeunload", e => {
+    if (!submitted) { e.preventDefault(); e.returnValue = ""; }
+  });
+});
+document.getElementById("btnSubmit").addEventListener("click", () => submitQuiz(false));
+</script>
+</body>
+</html>
