@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CHEM 3A — Tier 2 Skill Check</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --accent: #2a5d8f;
+    --good: #1f7a3a;
+    --bad: #b22d2d;
+    --warn: #c46c00;
+    --border: #d9d9d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 24px 20px 80px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+  input[type="text"] {
+    width: 100%; font-size: 16px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff;
+  }
+  button {
+    background: var(--accent); color: white; border: none;
+    padding: 12px 20px; border-radius: 6px; font-size: 15px;
+    font-weight: 600; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { background: #999; cursor: not-allowed; }
+  button.success { background: var(--good); }
+  .timer {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600;
+  }
+  .timer.warning { background: #fff4e0; border-color: var(--warn); color: var(--warn); }
+  .timer.critical { background: #ffe5e5; border-color: var(--bad); color: var(--bad); }
+  .timer-time { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .qcard { margin-bottom: 14px; }
+  .qhead { font-weight: 700; margin-bottom: 8px; font-size: 15px; color: var(--accent); }
+  .qstem { white-space: pre-wrap; margin-bottom: 12px; font-size: 16px; }
+  .choice {
+    display: block; padding: 10px 12px; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; background: #fafaf7;
+    transition: background 0.1s;
+  }
+  .choice:hover { background: #eef2f7; }
+  .choice input { margin-right: 10px; }
+  .choice.selected { background: #dde9f5; border-color: var(--accent); }
+  .choice.correct { background: #def5e1; border-color: var(--good); }
+  .choice.incorrect { background: #f8d7d7; border-color: var(--bad); }
+  .results-summary {
+    background: #fff; border: 2px solid var(--accent);
+    border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .score { font-size: 42px; font-weight: 700; margin: 8px 0; }
+  .pass { color: var(--good); }
+  .fail { color: var(--bad); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .footer-note {
+    background: #fffce5; border-left: 4px solid var(--warn);
+    padding: 10px 14px; margin-top: 14px; font-size: 14px; border-radius: 4px;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="screen-start">
+    <h1>CHEM 3A — Tier 2 Skill Check</h1>
+    <div class="sub">Chemical Language (Nomenclature & Mole Concepts) · 15 questions · 30 minutes · 80% to pass</div>
+
+    <div class="card">
+      <p><strong>Instructions:</strong></p>
+      <ul>
+        <li>Closed-note assessment.</li>
+        <li>You have <strong>30 minutes</strong>. Timer auto-submits at zero.</li>
+        <li>Pick the best answer. You can change answers until you submit.</li>
+        <li>When done, click <strong>Submit</strong>, then take a screenshot of your score.</li>
+      </ul>
+      <label for="studentName">Your full name (required):</label>
+      <input id="studentName" type="text" placeholder="Last, First" autocomplete="name">
+      <div style="margin-top:14px;">
+        <button id="btnStart">Start Skill Check</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-quiz" class="hidden">
+    <div class="timer" id="timer">
+      <div>Skill Check in progress — <span id="studentLabel"></span></div>
+      <div class="timer-time" id="timerTime">30:00</div>
+    </div>
+    <div id="questionsContainer"></div>
+    <div class="actions">
+      <button id="btnSubmit" class="success">Submit Quiz</button>
+    </div>
+  </div>
+
+  <div id="screen-results" class="hidden">
+    <div class="results-summary">
+      <div style="font-size:14px; color:var(--muted); letter-spacing:0.5px;">CHEM 3A · TIER 2 SKILL CHECK</div>
+      <div class="score" id="scoreDisplay">--/15</div>
+      <div id="passLabel"></div>
+      <div id="studentResultLabel" style="margin-top:10px; font-size:18px; font-weight:600;"></div>
+      <div id="timestampLabel" style="margin-top:4px; color: var(--muted); font-size:13px;"></div>
+    </div>
+    <div class="footer-note" style="text-align:center;">
+      <strong>📸 Take a screenshot of this page</strong> and show it to Prof. Gilley before you leave.
+    </div>
+    <div id="reviewContainer" style="margin-top:24px;"></div>
+  </div>
+
+</div>
+
+<script>
+const QUIZ_TITLE = "CHEM 3A — Tier 2 Skill Check";
+const NUM_QUESTIONS = 15;
+const TIME_LIMIT_SEC = 30 * 60;
+const PASS_PERCENT = 80;
+
+const QUESTION_BANK = [{"id": 1, "topic": "Ionic nomenclature", "stem": "What is the correct chemical formula for aluminum phosphate?", "choices": {"A": "Al₃PO₄", "B": "AlPO₄", "C": "Al(PO₄)₃", "D": "Al₃(PO₄)₂"}, "answer": "B"}, {"id": 2, "topic": "Ionic nomenclature", "stem": "The active ingredient in milk of magnesia, an antacid, is magnesium hydroxide. What is the chemical formula for this compound?", "choices": {"A": "MgOH", "B": "Mg(OH)₂", "C": "Mg₂OH", "D": "MgO₂H₂"}, "answer": "B"}, {"id": 3, "topic": "Transition metal nomenclature", "stem": "What is the systematic name for Cr₂O₃?", "choices": {"A": "Chromium oxide", "B": "Chromium(II) oxide", "C": "Chromium(III) oxide", "D": "Dichromium trioxide"}, "answer": "C"}, {"id": 4, "topic": "Molecular nomenclature", "stem": "What is the correct name for N₂O₄?", "choices": {"A": "Nitrogen oxide", "B": "Nitrogen tetroxide", "C": "Dinitrogen tetroxide", "D": "Dinitrogen(IV) oxide"}, "answer": "C"}, {"id": 5, "topic": "Molecular nomenclature", "stem": "Which formula represents diphosphorus pentoxide?", "choices": {"A": "P₂O₅", "B": "P₅O₂", "C": "PO₅", "D": "P₂O₁₀"}, "answer": "A"}, {"id": 6, "topic": "Acid nomenclature", "stem": "What is the correct name for H₂SO₄?", "choices": {"A": "Hydrosulfuric acid", "B": "Sulfurous acid", "C": "Sulfuric acid", "D": "Hydrogen sulfate"}, "answer": "C"}, {"id": 7, "topic": "Acid nomenclature", "stem": "Which formula represents hydrobromic acid?", "choices": {"A": "HBrO", "B": "HBrO₃", "C": "H₂Br", "D": "HBr"}, "answer": "D"}, {"id": 8, "topic": "Molar mass calculation", "stem": "What is the molar mass of Ca(NO₃)₂?", "choices": {"A": "70.09 g/mol", "B": "102.09 g/mol", "C": "150.09 g/mol", "D": "164.10 g/mol"}, "answer": "D"}, {"id": 9, "topic": "Mole-mass conversion", "stem": "How many grams are in 2.50 moles of NaCl? (Molar mass = 58.44 g/mol)", "choices": {"A": "23.4 g", "B": "58.4 g", "C": "117 g", "D": "146 g"}, "answer": "D"}, {"id": 10, "topic": "Mole-mass conversion", "stem": "How many moles are in 90.0 g of water (H₂O)? (Molar mass = 18.02 g/mol)", "choices": {"A": "0.200 mol", "B": "2.00 mol", "C": "5.00 mol", "D": "18.0 mol"}, "answer": "C"}, {"id": 11, "topic": "Mole-particle conversion", "stem": "How many molecules are in 0.500 moles of CO₂?", "choices": {"A": "3.01 × 10²²", "B": "3.01 × 10²³", "C": "6.02 × 10²³", "D": "1.20 × 10²⁴"}, "answer": "B"}, {"id": 12, "topic": "Mole-particle conversion", "stem": "A sample contains 1.204 × 10²⁴ atoms of carbon. How many moles of carbon is this?", "choices": {"A": "0.500 mol", "B": "1.00 mol", "C": "2.00 mol", "D": "6.02 mol"}, "answer": "C"}, {"id": 13, "topic": "Percent composition", "stem": "What is the percent by mass of oxygen in CO₂? (Molar mass = 44.01 g/mol)", "choices": {"A": "27.3%", "B": "36.4%", "C": "63.6%", "D": "72.7%"}, "answer": "D"}, {"id": 14, "topic": "Percent composition", "stem": "Which compound has the highest percent of nitrogen by mass?", "choices": {"A": "NO", "B": "NO₂", "C": "N₂O", "D": "N₂O₄"}, "answer": "C"}, {"id": 15, "topic": "Empirical/molecular formula", "stem": "A compound is 40.0% carbon, 6.7% hydrogen, and 53.3% oxygen by mass. Its molar mass is 180 g/mol. What is its molecular formula?", "choices": {"A": "CH₂O", "B": "C₂H₄O₂", "C": "C₃H₆O₃", "D": "C₆H₁₂O₆"}, "answer": "D"}];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandomQuestions(bank, n) {
+  const k = Math.min(n, bank.length);
+  return shuffle(bank).slice(0, k);
+}
+
+function buildQuizQuestions() {
+  const picked = pickRandomQuestions(QUESTION_BANK, NUM_QUESTIONS);
+  return picked.map((q, idx) => {
+    const letters = ["A","B","C","D"];
+    const choicesArr = letters.map(L => ({ text: q.choices[L], isCorrect: L === q.answer }));
+    const shuffled = shuffle(choicesArr);
+    const newChoices = {};
+    let newCorrect = null;
+    shuffled.forEach((c, i) => {
+      const newL = letters[i];
+      newChoices[newL] = c.text;
+      if (c.isCorrect) newCorrect = newL;
+    });
+    return {
+      displayIndex: idx + 1,
+      bankId: q.id,
+      topic: q.topic,
+      stem: q.stem,
+      choices: newChoices,
+      correct: newCorrect,
+      selected: null,
+    };
+  });
+}
+
+let quiz = [];
+let timerInterval = null;
+let endTime = null;
+let submitted = false;
+let studentName = "";
+
+function renderQuestions() {
+  const c = document.getElementById("questionsContainer");
+  c.innerHTML = "";
+  quiz.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    card.id = "q-" + qi;
+    let html = '<div class="qhead">Question ' + q.displayIndex + ' of ' + NUM_QUESTIONS + '</div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      const id = "q" + qi + "_" + L;
+      html += '<label class="choice" data-q="' + qi + '" data-l="' + L + '">';
+      html += '<input type="radio" name="q' + qi + '" value="' + L + '" id="' + id + '"> ';
+      html += '<strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]);
+      html += '</label>';
+    });
+    card.innerHTML = html;
+    c.appendChild(card);
+  });
+  c.addEventListener("change", e => {
+    if (e.target && e.target.type === "radio") {
+      const qi = parseInt(e.target.name.slice(1), 10);
+      quiz[qi].selected = e.target.value;
+      const labels = document.querySelectorAll('label.choice[data-q="' + qi + '"]');
+      labels.forEach(lb => lb.classList.toggle("selected", lb.getAttribute("data-l") === e.target.value));
+    }
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function startTimer() {
+  endTime = Date.now() + TIME_LIMIT_SEC * 1000;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+}
+function updateTimer() {
+  const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById("timerTime").textContent =
+    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  const t = document.getElementById("timer");
+  t.classList.toggle("warning", remaining <= 300 && remaining > 60);
+  t.classList.toggle("critical", remaining <= 60);
+  if (remaining <= 0 && !submitted) {
+    clearInterval(timerInterval);
+    submitQuiz(true);
+  }
+}
+
+function submitQuiz(autoSubmitted) {
+  if (submitted) return;
+  const unanswered = quiz.filter(q => !q.selected).length;
+  if (!autoSubmitted && unanswered > 0) {
+    if (!confirm("You have " + unanswered + " unanswered question(s). Submit anyway?")) return;
+  }
+  submitted = true;
+  if (timerInterval) clearInterval(timerInterval);
+
+  let correct = 0;
+  quiz.forEach(q => { if (q.selected === q.correct) correct++; });
+  const total = quiz.length;
+  const pct = Math.round((correct / total) * 100);
+  const passed = pct >= PASS_PERCENT;
+
+  document.getElementById("screen-quiz").classList.add("hidden");
+  const rs = document.getElementById("screen-results");
+  rs.classList.remove("hidden");
+  document.getElementById("scoreDisplay").textContent = correct + "/" + total + "  (" + pct + "%)";
+  document.getElementById("scoreDisplay").className = "score " + (passed ? "pass" : "fail");
+  document.getElementById("passLabel").innerHTML = passed
+    ? '<strong style="color:var(--good);">PASS — meets 80% standard</strong>'
+    : '<strong style="color:var(--bad);">DID NOT PASS — complete remediation before retake</strong>';
+  document.getElementById("studentResultLabel").textContent =
+    studentName + (autoSubmitted ? " · auto-submitted (time expired)" : "");
+  const now = new Date();
+  const ts = now.toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+  document.getElementById("timestampLabel").textContent = "Completed: " + ts;
+
+  const rev = document.getElementById("reviewContainer");
+  rev.innerHTML = "<h2 style='margin-top:0;'>Question Review</h2>";
+  quiz.forEach((q) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    let html = '<div class="qhead">Q' + q.displayIndex + ' &middot; <span style="color:var(--muted);font-weight:400;">Topic: ' + escapeHtml(q.topic || "") + ' &middot; Bank #' + q.bankId + '</span></div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      let cls = "choice";
+      if (L === q.correct) cls += " correct";
+      if (L === q.selected && q.selected !== q.correct) cls += " incorrect";
+      let mark = "";
+      if (L === q.correct) mark = " ✓ correct";
+      if (L === q.selected && q.selected !== q.correct) mark = " ✗ your answer";
+      else if (L === q.selected && q.selected === q.correct) mark = " ✓ your answer";
+      html += '<div class="' + cls + '"><strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]) + '<em style="color:var(--muted);">' + mark + '</em></div>';
+    });
+    if (!q.selected) {
+      html += '<div style="color:var(--bad); font-size:13px; margin-top:6px;"><em>Not answered</em></div>';
+    }
+    card.innerHTML = html;
+    rev.appendChild(card);
+  });
+
+  window.scrollTo(0, 0);
+}
+
+document.getElementById("btnStart").addEventListener("click", () => {
+  const nm = document.getElementById("studentName").value.trim();
+  if (!nm) { alert("Please enter your full name."); return; }
+  studentName = nm;
+  document.getElementById("studentLabel").textContent = nm;
+  quiz = buildQuizQuestions();
+  document.getElementById("screen-start").classList.add("hidden");
+  document.getElementById("screen-quiz").classList.remove("hidden");
+  renderQuestions();
+  startTimer();
+  window.addEventListener("beforeunload", e => {
+    if (!submitted) { e.preventDefault(); e.returnValue = ""; }
+  });
+});
+document.getElementById("btnSubmit").addEventListener("click", () => submitQuiz(false));
+</script>
+</body>
+</html>
