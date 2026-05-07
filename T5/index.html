@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CHEM 3A — Tier 5 Skill Check</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --accent: #2a5d8f;
+    --good: #1f7a3a;
+    --bad: #b22d2d;
+    --warn: #c46c00;
+    --border: #d9d9d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 24px 20px 80px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+  input[type="text"] {
+    width: 100%; font-size: 16px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff;
+  }
+  button {
+    background: var(--accent); color: white; border: none;
+    padding: 12px 20px; border-radius: 6px; font-size: 15px;
+    font-weight: 600; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { background: #999; cursor: not-allowed; }
+  button.success { background: var(--good); }
+  .timer {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600;
+  }
+  .timer.warning { background: #fff4e0; border-color: var(--warn); color: var(--warn); }
+  .timer.critical { background: #ffe5e5; border-color: var(--bad); color: var(--bad); }
+  .timer-time { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .qcard { margin-bottom: 14px; }
+  .qhead { font-weight: 700; margin-bottom: 8px; font-size: 15px; color: var(--accent); }
+  .qstem { white-space: pre-wrap; margin-bottom: 12px; font-size: 16px; }
+  .choice {
+    display: block; padding: 10px 12px; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; background: #fafaf7;
+    transition: background 0.1s;
+  }
+  .choice:hover { background: #eef2f7; }
+  .choice input { margin-right: 10px; }
+  .choice.selected { background: #dde9f5; border-color: var(--accent); }
+  .choice.correct { background: #def5e1; border-color: var(--good); }
+  .choice.incorrect { background: #f8d7d7; border-color: var(--bad); }
+  .results-summary {
+    background: #fff; border: 2px solid var(--accent);
+    border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .score { font-size: 42px; font-weight: 700; margin: 8px 0; }
+  .pass { color: var(--good); }
+  .fail { color: var(--bad); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .footer-note {
+    background: #fffce5; border-left: 4px solid var(--warn);
+    padding: 10px 14px; margin-top: 14px; font-size: 14px; border-radius: 4px;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="screen-start">
+    <h1>CHEM 3A — Tier 5 Skill Check</h1>
+    <div class="sub">Stoichiometry · 15 questions · 30 minutes · 80% to pass</div>
+
+    <div class="card">
+      <p><strong>Instructions:</strong></p>
+      <ul>
+        <li>Closed-note assessment.</li>
+        <li>You have <strong>30 minutes</strong>. Timer auto-submits at zero.</li>
+        <li>Pick the best answer. You can change answers until you submit.</li>
+        <li>When done, click <strong>Submit</strong>, then take a screenshot of your score.</li>
+      </ul>
+      <label for="studentName">Your full name (required):</label>
+      <input id="studentName" type="text" placeholder="Last, First" autocomplete="name">
+      <div style="margin-top:14px;">
+        <button id="btnStart">Start Skill Check</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-quiz" class="hidden">
+    <div class="timer" id="timer">
+      <div>Skill Check in progress — <span id="studentLabel"></span></div>
+      <div class="timer-time" id="timerTime">30:00</div>
+    </div>
+    <div id="questionsContainer"></div>
+    <div class="actions">
+      <button id="btnSubmit" class="success">Submit Quiz</button>
+    </div>
+  </div>
+
+  <div id="screen-results" class="hidden">
+    <div class="results-summary">
+      <div style="font-size:14px; color:var(--muted); letter-spacing:0.5px;">CHEM 3A · TIER 5 SKILL CHECK</div>
+      <div class="score" id="scoreDisplay">--/15</div>
+      <div id="passLabel"></div>
+      <div id="studentResultLabel" style="margin-top:10px; font-size:18px; font-weight:600;"></div>
+      <div id="timestampLabel" style="margin-top:4px; color: var(--muted); font-size:13px;"></div>
+    </div>
+    <div class="footer-note" style="text-align:center;">
+      <strong>📸 Take a screenshot of this page</strong> and show it to Prof. Gilley before you leave.
+    </div>
+    <div id="reviewContainer" style="margin-top:24px;"></div>
+  </div>
+
+</div>
+
+<script>
+const QUIZ_TITLE = "CHEM 3A — Tier 5 Skill Check";
+const NUM_QUESTIONS = 15;
+const TIME_LIMIT_SEC = 30 * 60;
+const PASS_PERCENT = 80;
+
+const QUESTION_BANK = [{"id": 1, "topic": "Molar Mass: Simple Compounds", "stem": "What is the molar mass of aluminum oxide, Al₂O₃?", "choices": {"A": "78.00 g/mol", "B": "101.96 g/mol", "C": "54.00 g/mol", "D": "43.00 g/mol"}, "answer": "B", "_slot": 1, "_variant": 1}, {"id": 2, "topic": "Molar Mass: Simple Compounds", "stem": "What is the molar mass of chlorine gas, Cl₂?", "choices": {"A": "35.45 g/mol", "B": "70.90 g/mol", "C": "17.73 g/mol", "D": "106.35 g/mol"}, "answer": "B", "_slot": 1, "_variant": 2}, {"id": 3, "topic": "Molar Mass: Simple Compounds", "stem": "What is the molar mass of sodium sulfate, Na₂SO₄?", "choices": {"A": "119.04 g/mol", "B": "126.04 g/mol", "C": "142.04 g/mol", "D": "158.10 g/mol"}, "answer": "C", "_slot": 1, "_variant": 3}, {"id": 4, "topic": "Molar Mass: Simple Compounds", "stem": "What is the molar mass of phosphoric acid, H₃PO₄?", "choices": {"A": "82.00 g/mol", "B": "95.99 g/mol", "C": "97.99 g/mol", "D": "114.00 g/mol"}, "answer": "C", "_slot": 1, "_variant": 4}, {"id": 5, "topic": "Molar Mass: Simple Compounds", "stem": "What is the molar mass of iron(III) chloride, FeCl₃?", "choices": {"A": "91.30 g/mol", "B": "126.75 g/mol", "C": "162.20 g/mol", "D": "197.65 g/mol"}, "answer": "C", "_slot": 1, "_variant": 5}, {"id": 6, "topic": "Molar Mass: Simple Compounds", "stem": "What is the molar mass of iron(III) phosphate, FePO₄?", "choices": {"A": "86.94 g/mol", "B": "118.91 g/mol", "C": "150.82 g/mol", "D": "182.87 g/mol"}, "answer": "C", "_slot": 1, "_variant": 6}, {"id": 7, "topic": "Mole Ratio Identification", "stem": "For the reaction: 4Fe + 3O₂ → 2Fe₂O₃\nWhich mole ratio correctly converts from moles of Fe to moles of Fe₂O₃?", "choices": {"A": "4 mol Fe / 2 mol Fe₂O₃", "B": "2 mol Fe₂O₃ / 4 mol Fe", "C": "3 mol O₂ / 4 mol Fe", "D": "4 mol Fe / 3 mol O₂"}, "answer": "B", "_slot": 2, "_variant": 1}, {"id": 8, "topic": "Mole Ratio Identification", "stem": "For the reaction: 2H₂ + O₂ → 2H₂O\nWhich mole ratio correctly converts from moles of O₂ to moles of H₂O?", "choices": {"A": "1 mol O₂ / 2 mol H₂O", "B": "2 mol H₂O / 1 mol O₂", "C": "2 mol H₂ / 2 mol H₂O", "D": "1 mol O₂ / 2 mol H₂"}, "answer": "B", "_slot": 2, "_variant": 2}, {"id": 9, "topic": "Mole Ratio Identification", "stem": "For the reaction: N₂ + 3H₂ → 2NH₃\nWhat is the mole ratio of H₂ to NH₃?", "choices": {"A": "1:2", "B": "3:1", "C": "3:2", "D": "2:3"}, "answer": "C", "_slot": 2, "_variant": 3}, {"id": 10, "topic": "Mole Ratio Identification", "stem": "For the reaction: 2Al + 3Cl₂ → 2AlCl₃\nHow many moles of AlCl₃ are produced per mole of Al?", "choices": {"A": "3", "B": "2", "C": "1", "D": "0.5"}, "answer": "C", "_slot": 2, "_variant": 4}, {"id": 11, "topic": "Mole Ratio Identification", "stem": "For the reaction: CH₄ + 2O₂ → CO₂ + 2H₂O\nWhat is the mole ratio of CH₄ to CO₂?", "choices": {"A": "1:2", "B": "2:1", "C": "1:1", "D": "2:2"}, "answer": "C", "_slot": 2, "_variant": 5}, {"id": 12, "topic": "Mole Ratio Identification", "stem": "For the reaction: 2KClO₃ → 2KCl + 3O₂\nWhat is the mole ratio of KClO₃ to O₂?", "choices": {"A": "1:1", "B": "3:2", "C": "2:3", "D": "1:3"}, "answer": "C", "_slot": 2, "_variant": 6}, {"id": 13, "topic": "Mole-to-Mole Conversion (Simple)", "stem": "For the reaction: CaCO₃ → CaO + CO₂\nHow many moles of CaO are produced from 3.0 mol CaCO₃?", "choices": {"A": "1.0 mol", "B": "1.5 mol", "C": "3.0 mol", "D": "6.0 mol"}, "answer": "C", "_slot": 3, "_variant": 1}, {"id": 14, "topic": "Mole-to-Mole Conversion (Simple)", "stem": "For the reaction: N₂ + 3H₂ → 2NH₃\nHow many moles of NH₃ can be produced from 1.5 mol of N₂?", "choices": {"A": "0.75 mol", "B": "1.5 mol", "C": "3.0 mol", "D": "4.5 mol"}, "answer": "C", "_slot": 3, "_variant": 2}, {"id": 15, "topic": "Mole-to-Mole Conversion (Simple)", "stem": "For the reaction: CH₄ + 2O₂ → CO₂ + 2H₂O\nIf 5.0 mol of CO₂ are produced, how many moles of H₂O are also produced?", "choices": {"A": "2.5 mol", "B": "5.0 mol", "C": "10.0 mol", "D": "20.0 mol"}, "answer": "C", "_slot": 3, "_variant": 3}, {"id": 16, "topic": "Mole-to-Mole Conversion (Simple)", "stem": "For the reaction: P₄ + 5O₂ → P₄O₁₀\nHow many moles of P₄O₁₀ are produced from 2.0 mol P₄?", "choices": {"A": "0.4 mol", "B": "1.0 mol", "C": "2.0 mol", "D": "10.0 mol"}, "answer": "C", "_slot": 3, "_variant": 4}, {"id": 17, "topic": "Mole-to-Mole Conversion (Simple)", "stem": "For the reaction: 2H₂O₂ → 2H₂O + O₂\nHow many moles of O₂ are produced from 6.0 mol H₂O₂?", "choices": {"A": "1.5 mol", "B": "3.0 mol", "C": "6.0 mol", "D": "12.0 mol"}, "answer": "B", "_slot": 3, "_variant": 5}, {"id": 18, "topic": "Mole-to-Mole Conversion (Simple)", "stem": "For the reaction: 2KClO₃ → 2KCl + 3O₂\nHow many moles of KCl are produced from 4.0 mol KClO₃?", "choices": {"A": "2.0 mol", "B": "3.0 mol", "C": "4.0 mol", "D": "6.0 mol"}, "answer": "C", "_slot": 3, "_variant": 6}, {"id": 19, "topic": "Percent Yield: Forward Calculation", "stem": "A student calculates the theoretical yield to be 40.0 g. The actual yield is 34.0 g. What is the percent yield?", "choices": {"A": "34.0%", "B": "74.0%", "C": "85.0%", "D": "117.6%"}, "answer": "C", "_slot": 4, "_variant": 1}, {"id": 20, "topic": "Percent Yield: Forward Calculation", "stem": "In a reaction with 1:1 stoichiometry, 3.0 mol of reactant yields 2.1 mol of product. What is the percent yield?", "choices": {"A": "30%", "B": "50%", "C": "70%", "D": "143%"}, "answer": "C", "_slot": 4, "_variant": 2}, {"id": 21, "topic": "Percent Yield: Forward Calculation", "stem": "Using the data: theoretical yield = 15.4 g, actual yield = 12.3 g. What is the percent yield?", "choices": {"A": "59.1%", "B": "79.9%", "C": "125.2%", "D": "45.5%"}, "answer": "B", "_slot": 4, "_variant": 3}, {"id": 22, "topic": "Percent Yield: Forward Calculation", "stem": "Theoretical yield = 60.0 g, actual yield = 48.0 g. What is the percent yield?", "choices": {"A": "48.0%", "B": "60.0%", "C": "80.0%", "D": "125%"}, "answer": "C", "_slot": 4, "_variant": 4}, {"id": 23, "topic": "Percent Yield: Forward Calculation", "stem": "Theoretical yield = 25.0 g, actual yield = 21.5 g. What is the percent yield?", "choices": {"A": "43.0%", "B": "86.0%", "C": "93.0%", "D": "116%"}, "answer": "B", "_slot": 4, "_variant": 5}, {"id": 24, "topic": "Percent Yield: Forward Calculation", "stem": "A student expects to produce 2.50 mol of product (theoretical). They obtain 2.00 mol. What is the percent yield?", "choices": {"A": "50%", "B": "80%", "C": "100%", "D": "125%"}, "answer": "B", "_slot": 4, "_variant": 6}, {"id": 25, "topic": "Conceptual Understanding", "stem": "A balanced chemical equation provides all of the following information EXCEPT:", "choices": {"A": "The mole ratios of reactants and products", "B": "The physical states of each substance (if indicated)", "C": "The rate at which the reaction proceeds", "D": "The types of atoms involved in the reaction"}, "answer": "C", "_slot": 5, "_variant": 1}, {"id": 26, "topic": "Conceptual Understanding", "stem": "A student asks: \"Why can't I just use grams directly with the coefficients instead of converting to moles first?\" Which response best explains why the mole step is required?", "choices": {"A": "Because grams are not precise enough for chemistry calculations", "B": "Because coefficients represent mole ratios, not mass ratios — different substances have different molar masses", "C": "Because the periodic table only lists values in moles, not in grams", "D": "Because grams are a unit of volume, not a unit of amount"}, "answer": "B", "_slot": 5, "_variant": 2}, {"id": 27, "topic": "Conceptual Understanding", "stem": "A student calculates the molar mass of NaCl by adding 11 + 17 = 28 g/mol. What error did the student make?", "choices": {"A": "The student added the mass numbers instead of the atomic masses", "B": "The student used the atomic numbers instead of the atomic masses from the periodic table", "C": "The student forgot to include the charge of the ions", "D": "The student should have multiplied instead of added"}, "answer": "B", "_slot": 5, "_variant": 3}, {"id": 28, "topic": "Conceptual Understanding", "stem": "A sandwich recipe requires 2 slices of bread and 1 slice of cheese per sandwich. You have 10 slices of bread and 3 slices of cheese. Which statement is correct?", "choices": {"A": "Bread is the limiting \"reactant\" because you have more slices of it", "B": "Cheese is the limiting \"reactant\" because you can only make 3 sandwiches before running out of cheese", "C": "You can make 5 sandwiches because you have 10 slices of bread", "D": "You can make 13 sandwiches using all available ingredients"}, "answer": "B", "_slot": 5, "_variant": 4}, {"id": 29, "topic": "Conceptual Understanding", "stem": "Which of the following is the best explanation for why a reaction's percent yield is less than 100%?", "choices": {"A": "The law of conservation of mass was violated", "B": "Some product was lost during transfer, side reactions occurred, or the reaction was incomplete", "C": "The student used the wrong mole ratio in their calculation", "D": "The molar mass of the product was calculated incorrectly"}, "answer": "B", "_slot": 5, "_variant": 5}, {"id": 30, "topic": "Conceptual Understanding", "stem": "A student reacts 10.0 g of zinc with excess HCl and calculates that 15.4 g of ZnCl₂ should form. After filtering and drying, the student collects 12.3 g. Which is the theoretical yield and which is the actual yield?", "choices": {"A": "Theoretical = 12.3 g, Actual = 15.4 g", "B": "Theoretical = 15.4 g, Actual = 12.3 g", "C": "Theoretical = 10.0 g, Actual = 12.3 g", "D": "Theoretical = 15.4 g, Actual = 10.0 g"}, "answer": "B", "_slot": 5, "_variant": 6}, {"id": 31, "topic": "Molar Mass: Parenthetical or Complex Formulas", "stem": "What is the molar mass of magnesium nitrate, Mg(NO₃)₂?", "choices": {"A": "86.32 g/mol", "B": "100.33 g/mol", "C": "148.33 g/mol", "D": "164.31 g/mol"}, "answer": "C", "_slot": 6, "_variant": 1}, {"id": 32, "topic": "Molar Mass: Parenthetical or Complex Formulas", "stem": "A pharmacy technician needs to verify the molar mass of aspirin (acetylsalicylic acid), C₉H₈O₄. What is its molar mass?", "choices": {"A": "138.1 g/mol", "B": "152.1 g/mol", "C": "166.2 g/mol", "D": "180.2 g/mol"}, "answer": "D", "_slot": 6, "_variant": 2}, {"id": 33, "topic": "Molar Mass: Parenthetical or Complex Formulas", "stem": "What is the molar mass of ammonium sulfate, (NH₄)₂SO₄?", "choices": {"A": "114.12 g/mol", "B": "132.14 g/mol", "C": "96.11 g/mol", "D": "148.16 g/mol"}, "answer": "B", "_slot": 6, "_variant": 3}, {"id": 34, "topic": "Molar Mass: Parenthetical or Complex Formulas", "stem": "What is the molar mass of glucose, C₆H₁₂O₆?", "choices": {"A": "72.06 g/mol", "B": "144.13 g/mol", "C": "180.16 g/mol", "D": "342.30 g/mol"}, "answer": "C", "_slot": 6, "_variant": 4}, {"id": 35, "topic": "Molar Mass: Parenthetical or Complex Formulas", "stem": "Metformin (C₄H₁₁N₅) is a common diabetes medication. What is its molar mass?", "choices": {"A": "101.13 g/mol", "B": "115.15 g/mol", "C": "129.18 g/mol", "D": "143.17 g/mol"}, "answer": "C", "_slot": 6, "_variant": 5}, {"id": 36, "topic": "Molar Mass: Parenthetical or Complex Formulas", "stem": "What is the molar mass of caffeine, C₈H₁₀N₄O₂?", "choices": {"A": "166.18 g/mol", "B": "178.19 g/mol", "C": "194.19 g/mol", "D": "210.21 g/mol"}, "answer": "C", "_slot": 6, "_variant": 6}, {"id": 37, "topic": "Mole-to-Mole Conversion (Complex)", "stem": "For the reaction: 2KClO₃ → 2KCl + 3O₂\nHow many moles of O₂ are produced from 4.0 mol KClO₃?", "choices": {"A": "2.0 mol", "B": "4.0 mol", "C": "6.0 mol", "D": "8.0 mol"}, "answer": "C", "_slot": 7, "_variant": 1}, {"id": 38, "topic": "Mole-to-Mole Conversion (Complex)", "stem": "For the reaction: 2Al + 3H₂SO₄ → Al₂(SO₄)₃ + 3H₂\nHow many moles of H₂SO₄ are needed to react with 4.0 mol Al?", "choices": {"A": "2.0 mol", "B": "4.0 mol", "C": "6.0 mol", "D": "8.0 mol"}, "answer": "C", "_slot": 7, "_variant": 2}, {"id": 39, "topic": "Mole-to-Mole Conversion (Complex)", "stem": "For the reaction: 2C₂H₆ + 7O₂ → 4CO₂ + 6H₂O\nHow many moles of O₂ are required to completely combust 3.0 mol C₂H₆?", "choices": {"A": "7.0 mol", "B": "10.5 mol", "C": "14.0 mol", "D": "21.0 mol"}, "answer": "B", "_slot": 7, "_variant": 3}, {"id": 40, "topic": "Mole-to-Mole Conversion (Complex)", "stem": "For the reaction: 2C₈H₁₈ + 25O₂ → 16CO₂ + 18H₂O\nHow many moles of CO₂ are produced from 1.0 mol C₈H₁₈?", "choices": {"A": "2.0 mol", "B": "8.0 mol", "C": "16.0 mol", "D": "25.0 mol"}, "answer": "B", "_slot": 7, "_variant": 4}, {"id": 41, "topic": "Mole-to-Mole Conversion (Complex)", "stem": "For the reaction: 2Al + 3CuSO₄ → Al₂(SO₄)₃ + 3Cu\nIf 9.0 mol Cu are produced, how many moles of Al were consumed?", "choices": {"A": "3.0 mol", "B": "6.0 mol", "C": "9.0 mol", "D": "13.5 mol"}, "answer": "B", "_slot": 7, "_variant": 5}, {"id": 42, "topic": "Mole-to-Mole Conversion (Complex)", "stem": "For the reaction: 2Na + 2H₂O → 2NaOH + H₂\nA student says: \"2 mol Na produces 2 mol H₂ because the coefficient of Na and the subscript of H₂ are both 2.\" What is the correct number of moles of H₂ produced from 2.0 mol Na?", "choices": {"A": "0.5 mol", "B": "1.0 mol", "C": "2.0 mol", "D": "4.0 mol"}, "answer": "B", "_slot": 7, "_variant": 6}, {"id": 43, "topic": "Mass-to-Mass Stoichiometry", "stem": "For the reaction: CaO + H₂O → Ca(OH)₂\nHow many grams of Ca(OH)₂ are produced from 56.1 g of CaO?\n*(Molar masses: CaO = 56.08 g/mol, Ca(OH)₂ = 74.09 g/mol)*", "choices": {"A": "56.1 g", "B": "74.1 g", "C": "130.2 g", "D": "37.0 g"}, "answer": "B", "_slot": 8, "_variant": 1}, {"id": 44, "topic": "Mass-to-Mass Stoichiometry", "stem": "For the reaction: 2Mg + O₂ → 2MgO\nHow many grams of MgO are produced from 24.3 g of Mg?\n*(Molar masses: Mg = 24.31 g/mol, MgO = 40.30 g/mol)*", "choices": {"A": "20.2 g", "B": "40.3 g", "C": "80.6 g", "D": "16.0 g"}, "answer": "B", "_slot": 8, "_variant": 2}, {"id": 45, "topic": "Mass-to-Mass Stoichiometry", "stem": "For the reaction: C + O₂ → CO₂\nHow many grams of CO₂ are produced from 12.0 g of C?\n*(Molar masses: C = 12.01 g/mol, CO₂ = 44.01 g/mol)*", "choices": {"A": "12.0 g", "B": "32.0 g", "C": "44.0 g", "D": "56.0 g"}, "answer": "C", "_slot": 8, "_variant": 3}, {"id": 46, "topic": "Mass-to-Mass Stoichiometry", "stem": "For the reaction: 2Na + Cl₂ → 2NaCl\nHow many grams of NaCl are produced from 46.0 g of Na?\n*(Molar masses: Na = 22.99 g/mol, NaCl = 58.44 g/mol)*", "choices": {"A": "58.4 g", "B": "87.7 g", "C": "116.9 g", "D": "175.3 g"}, "answer": "C", "_slot": 8, "_variant": 4}, {"id": 47, "topic": "Mass-to-Mass Stoichiometry", "stem": "For the reaction: 2H₂ + O₂ → 2H₂O\nHow many grams of H₂O are produced from 4.0 g of H₂?\n*(Molar masses: H₂ = 2.016 g/mol, H₂O = 18.02 g/mol)*", "choices": {"A": "18.0 g", "B": "36.0 g", "C": "54.0 g", "D": "72.0 g"}, "answer": "B", "_slot": 8, "_variant": 5}, {"id": 48, "topic": "Mass-to-Mass Stoichiometry", "stem": "For the reaction: Mg + 2HCl → MgCl₂ + H₂\nHow many grams of MgCl₂ are produced from 24.3 g of Mg?\n*(Molar masses: Mg = 24.31 g/mol, MgCl₂ = 95.21 g/mol)*", "choices": {"A": "24.3 g", "B": "47.6 g", "C": "95.2 g", "D": "190.4 g"}, "answer": "C", "_slot": 8, "_variant": 6}, {"id": 49, "topic": "Limiting Reactant: Identification from Moles", "stem": "For the reaction: 2H₂ + O₂ → 2H₂O\nYou have 3.0 mol H₂ and 3.0 mol O₂. Which is the limiting reactant?", "choices": {"A": "H₂, because it has a coefficient of 2", "B": "O₂, because it has fewer moles", "C": "H₂, because it produces fewer moles of H₂O", "D": "O₂, because it produces fewer moles of H₂O"}, "answer": "C", "_slot": 9, "_variant": 1}, {"id": 50, "topic": "Limiting Reactant: Identification from Moles", "stem": "For the reaction: N₂ + 3H₂ → 2NH₃\nYou have 2.0 mol N₂ and 3.0 mol H₂. How many moles of NH₃ can be produced?", "choices": {"A": "1.0 mol", "B": "2.0 mol", "C": "4.0 mol", "D": "5.0 mol"}, "answer": "B", "_slot": 9, "_variant": 2}, {"id": 51, "topic": "Limiting Reactant: Identification from Moles", "stem": "For the reaction: 2Na + Cl₂ → 2NaCl\nYou have 6.0 mol Na and 2.0 mol Cl₂. Which is the limiting reactant and how many moles of NaCl are produced?", "choices": {"A": "Na is limiting; 6.0 mol NaCl", "B": "Cl₂ is limiting; 4.0 mol NaCl", "C": "Na is limiting; 3.0 mol NaCl", "D": "Cl₂ is limiting; 2.0 mol NaCl"}, "answer": "B", "_slot": 9, "_variant": 3}, {"id": 52, "topic": "Limiting Reactant: Identification from Moles", "stem": "For the reaction: C₃H₈ + 5O₂ → 3CO₂ + 4H₂O\nYou have 1.0 mol C₃H₈ and 4.0 mol O₂. How many moles of CO₂ are produced?", "choices": {"A": "1.0 mol", "B": "2.4 mol", "C": "3.0 mol", "D": "4.0 mol"}, "answer": "B", "_slot": 9, "_variant": 4}, {"id": 53, "topic": "Limiting Reactant: Identification from Moles", "stem": "For the reaction: 3Fe + 4H₂O → Fe₃O₄ + 4H₂\nYou have 3.0 mol Fe and 6.0 mol H₂O. Which is the limiting reactant?", "choices": {"A": "H₂O, because you need 4 mol per 3 mol Fe", "B": "Fe, because it produces fewer moles of Fe₃O₄", "C": "H₂O, because it has more moles", "D": "Neither — both are completely consumed"}, "answer": "B", "_slot": 9, "_variant": 5}, {"id": 54, "topic": "Limiting Reactant: Identification from Moles", "stem": "For the reaction: 4Fe + 3O₂ → 2Fe₂O₃\nYou have 8.0 mol Fe and 3.0 mol O₂. Which is the limiting reactant and how many moles of Fe₂O₃ are produced?", "choices": {"A": "Fe is limiting; 4.0 mol Fe₂O₃", "B": "O₂ is limiting; 2.0 mol Fe₂O₃", "C": "Fe is limiting; 2.0 mol Fe₂O₃", "D": "O₂ is limiting; 3.0 mol Fe₂O₃"}, "answer": "B", "_slot": 9, "_variant": 6}, {"id": 55, "topic": "Percent Yield: Reverse Calculation or Interpretation", "stem": "A reaction has a theoretical yield of 80.0 g. If the percent yield is 75%, what is the actual yield?", "choices": {"A": "20.0 g", "B": "60.0 g", "C": "106.7 g", "D": "75.0 g"}, "answer": "B", "_slot": 10, "_variant": 1}, {"id": 56, "topic": "Percent Yield: Reverse Calculation or Interpretation", "stem": "A chemist needs to collect 50.0 g of product. If the reaction typically runs at 80% yield, what theoretical yield must the chemist aim for?", "choices": {"A": "40.0 g", "B": "50.0 g", "C": "62.5 g", "D": "90.0 g"}, "answer": "C", "_slot": 10, "_variant": 2}, {"id": 57, "topic": "Percent Yield: Reverse Calculation or Interpretation", "stem": "A student calculates a percent yield of 115%. Which of the following is the most likely explanation?", "choices": {"A": "The student is an exceptionally skilled chemist", "B": "The student created extra product through a secondary reaction", "C": "The product was not fully dried and contains residual water or impurities, increasing its apparent mass", "D": "The percent yield formula does not apply to this type of reaction"}, "answer": "C", "_slot": 10, "_variant": 3}, {"id": 58, "topic": "Percent Yield: Reverse Calculation or Interpretation", "stem": "The percent yield formula is: % Yield = (Actual / Theoretical) × 100%\nWhich correctly rearranges this to solve for theoretical yield?", "choices": {"A": "Theoretical = Actual × (% Yield / 100)", "B": "Theoretical = Actual / (% Yield / 100)", "C": "Theoretical = % Yield / Actual × 100", "D": "Theoretical = (100 − % Yield) × Actual"}, "answer": "B", "_slot": 10, "_variant": 4}, {"id": 59, "topic": "Percent Yield: Reverse Calculation or Interpretation", "stem": "A student claims their reaction produced 120 g of product when the theoretical yield was 100 g. What should the student conclude?", "choices": {"A": "The reaction was more efficient than expected", "B": "An experimental error occurred — the product likely contains impurities or was not fully dried", "C": "The balanced equation must be wrong", "D": "Percent yield can exceed 100% in exothermic reactions"}, "answer": "B", "_slot": 10, "_variant": 5}, {"id": 60, "topic": "Percent Yield: Reverse Calculation or Interpretation", "stem": "A student needs to collect 45.0 g of product. The reaction typically runs at 90% yield. What theoretical yield is needed?", "choices": {"A": "40.5 g", "B": "45.0 g", "C": "50.0 g", "D": "55.0 g"}, "answer": "C", "_slot": 10, "_variant": 6}, {"id": 61, "topic": "Applied Stoichiometry: Healthcare Dosing (mg → mmol)", "stem": "A standard ibuprofen tablet contains 200 mg of ibuprofen (C₁₃H₁₈O₂, MM = 206.28 g/mol). How many millimoles of ibuprofen are in one tablet?", "choices": {"A": "0.0970 mmol", "B": "0.970 mmol", "C": "9.70 mmol", "D": "41.3 mmol"}, "answer": "B", "_slot": 11, "_variant": 1}, {"id": 62, "topic": "Applied Stoichiometry: Healthcare Dosing (mg → mmol)", "stem": "A patient takes a 325 mg aspirin tablet (C₉H₈O₄, MM = 180.16 g/mol). How many millimoles of aspirin is this?", "choices": {"A": "0.180 mmol", "B": "1.80 mmol", "C": "18.0 mmol", "D": "58.5 mmol"}, "answer": "B", "_slot": 11, "_variant": 2}, {"id": 63, "topic": "Applied Stoichiometry: Healthcare Dosing (mg → mmol)", "stem": "An acetaminophen (Tylenol) tablet contains 500 mg (C₈H₉NO₂, MM = 151.16 g/mol). How many millimoles of acetaminophen is this?", "choices": {"A": "0.302 mmol", "B": "1.51 mmol", "C": "3.31 mmol", "D": "33.1 mmol"}, "answer": "C", "_slot": 11, "_variant": 3}, {"id": 64, "topic": "Applied Stoichiometry: Healthcare Dosing (mg → mmol)", "stem": "A prescription calls for 850 mg of metformin (C₄H₁₁N₅, MM = 129.18 g/mol). How many millimoles is this?", "choices": {"A": "1.29 mmol", "B": "6.58 mmol", "C": "15.2 mmol", "D": "65.8 mmol"}, "answer": "B", "_slot": 11, "_variant": 4}, {"id": 65, "topic": "Applied Stoichiometry: Healthcare Dosing (mg → mmol)", "stem": "A 500 mg capsule of amoxicillin (C₁₆H₁₉N₃O₅S, MM = 365.40 g/mol) is prescribed. How many millimoles is this?", "choices": {"A": "0.365 mmol", "B": "1.37 mmol", "C": "3.65 mmol", "D": "13.7 mmol"}, "answer": "B", "_slot": 11, "_variant": 5}, {"id": 66, "topic": "Applied Stoichiometry: Healthcare Dosing (mg → mmol)", "stem": "An over-the-counter naproxen tablet contains 220 mg (C₁₄H₁₄O₃, MM = 230.26 g/mol). How many millimoles of naproxen is this?", "choices": {"A": "0.230 mmol", "B": "0.955 mmol", "C": "2.30 mmol", "D": "9.55 mmol"}, "answer": "B", "_slot": 11, "_variant": 6}, {"id": 67, "topic": "Limiting Reactant: Full Pathway from Grams", "stem": "For the reaction: 2Na + Cl₂ → 2NaCl\nYou react 23.0 g of Na with 71.0 g of Cl₂.\n*(MM: Na = 22.99, Cl₂ = 70.90, NaCl = 58.44 g/mol)*\nWhich is the limiting reactant, and how many grams of NaCl are produced?", "choices": {"A": "Cl₂ is limiting; 58.4 g NaCl", "B": "Na is limiting; 58.4 g NaCl", "C": "Cl₂ is limiting; 116.9 g NaCl", "D": "Na is limiting; 116.9 g NaCl"}, "answer": "B", "_slot": 12, "_variant": 1}, {"id": 68, "topic": "Limiting Reactant: Full Pathway from Grams", "stem": "For the reaction: 4Al + 3O₂ → 2Al₂O₃\nYou react 27.0 g of Al with 48.0 g of O₂.\n*(MM: Al = 26.98, O₂ = 32.00, Al₂O₃ = 101.96 g/mol)*\nWhich is the limiting reactant and how many grams of Al₂O₃ are produced?", "choices": {"A": "Al is limiting; 51.0 g", "B": "O₂ is limiting; 51.0 g", "C": "Al is limiting; 102.0 g", "D": "O₂ is limiting; 102.0 g"}, "answer": "A", "_slot": 12, "_variant": 2}, {"id": 69, "topic": "Limiting Reactant: Full Pathway from Grams", "stem": "For the reaction: Fe₂O₃ + 3C → 2Fe + 3CO\nYou react 159.7 g of Fe₂O₃ with 24.0 g of C.\n*(MM: Fe₂O₃ = 159.69, C = 12.01, Fe = 55.85 g/mol)*\nHow many grams of Fe are produced?", "choices": {"A": "37.2 g", "B": "55.9 g", "C": "74.5 g", "D": "111.7 g"}, "answer": "C", "_slot": 12, "_variant": 3}, {"id": 70, "topic": "Limiting Reactant: Full Pathway from Grams", "stem": "For the reaction: Mg + 2HCl → MgCl₂ + H₂\nYou react 24.3 g of Mg with 36.5 g of HCl.\n*(MM: Mg = 24.31, HCl = 36.46, H₂ = 2.016 g/mol)*\nHow many grams of H₂ are produced?", "choices": {"A": "0.50 g", "B": "1.0 g", "C": "2.0 g", "D": "4.0 g"}, "answer": "B", "_slot": 12, "_variant": 4}, {"id": 71, "topic": "Limiting Reactant: Full Pathway from Grams", "stem": "For the reaction: CaCO₃ + 2HCl → CaCl₂ + H₂O + CO₂\nYou react 50.0 g of CaCO₃ with 54.8 g of HCl.\n*(MM: CaCO₃ = 100.09, HCl = 36.46, CO₂ = 44.01 g/mol)*\nHow many grams of CO₂ are produced?", "choices": {"A": "11.0 g", "B": "22.0 g", "C": "33.0 g", "D": "44.0 g"}, "answer": "B", "_slot": 12, "_variant": 5}, {"id": 72, "topic": "Limiting Reactant: Full Pathway from Grams", "stem": "For the reaction: N₂ + 3H₂ → 2NH₃\nYou react 28.0 g of N₂ with 3.0 g of H₂.\n*(MM: N₂ = 28.02, H₂ = 2.016, NH₃ = 17.03 g/mol)*\nHow many grams of NH₃ are produced?", "choices": {"A": "8.5 g", "B": "16.9 g", "C": "34.1 g", "D": "51.1 g"}, "answer": "B", "_slot": 12, "_variant": 6}, {"id": 73, "topic": "Excess Reactant Remaining", "stem": "For the reaction: Mg + 2HCl → MgCl₂ + H₂\nYou have 2.0 mol Mg and 3.0 mol HCl. How many moles of the excess reactant remain after the reaction?", "choices": {"A": "0.25 mol Mg", "B": "0.50 mol Mg", "C": "1.0 mol HCl", "D": "1.5 mol HCl"}, "answer": "B", "_slot": 13, "_variant": 1}, {"id": 74, "topic": "Excess Reactant Remaining", "stem": "For the reaction: Mg(OH)₂ + 2HCl → MgCl₂ + 2H₂O\nYou have 0.30 mol Mg(OH)₂ and 0.50 mol HCl. How many moles of the excess reactant remain?", "choices": {"A": "0.10 mol HCl", "B": "0.05 mol Mg(OH)₂", "C": "0.20 mol Mg(OH)₂", "D": "0.30 mol HCl"}, "answer": "B", "_slot": 13, "_variant": 2}, {"id": 75, "topic": "Excess Reactant Remaining", "stem": "For the reaction: 3CuSO₄ + 2Al → Al₂(SO₄)₃ + 3Cu\nYou have 1.50 mol CuSO₄ and 2.00 mol Al. How many grams of the excess reactant remain?\n*(MM: Al = 26.98 g/mol)*", "choices": {"A": "13.5 g Al", "B": "27.0 g Al", "C": "40.5 g Al", "D": "54.0 g Al"}, "answer": "B", "_slot": 13, "_variant": 3}, {"id": 76, "topic": "Excess Reactant Remaining", "stem": "For the reaction: 2Na + Cl₂ → 2NaCl\nYou react 46.0 g Na and 106.4 g Cl₂. How many grams of the excess reactant remain?\n*(MM: Na = 22.99, Cl₂ = 70.90 g/mol)*", "choices": {"A": "17.7 g Cl₂", "B": "35.5 g Cl₂", "C": "53.3 g Cl₂", "D": "70.9 g Cl₂"}, "answer": "B", "_slot": 13, "_variant": 4}, {"id": 77, "topic": "Excess Reactant Remaining", "stem": "For the reaction: 2H₂ + O₂ → 2H₂O\nYou react 4.0 g H₂ and 48.0 g O₂. How many grams of the excess reactant remain?\n*(MM: H₂ = 2.016, O₂ = 32.00 g/mol)*", "choices": {"A": "8.0 g O₂", "B": "16.2 g O₂", "C": "32.0 g O₂", "D": "44.0 g O₂"}, "answer": "B", "_slot": 13, "_variant": 5}, {"id": 78, "topic": "Excess Reactant Remaining", "stem": "For the reaction: Fe₂O₃ + 3CO → 2Fe + 3CO₂\nYou react 159.7 g Fe₂O₃ and 112.0 g CO. How many grams of excess CO remain?\n*(MM: Fe₂O₃ = 159.69, CO = 28.01 g/mol)*", "choices": {"A": "14.0 g", "B": "28.0 g", "C": "56.0 g", "D": "84.0 g"}, "answer": "B", "_slot": 13, "_variant": 6}, {"id": 79, "topic": "Integrated Problem: LR + Theoretical Yield + Percent Yield", "stem": "For the reaction: 2Al + 3Cl₂ → 2AlCl₃\nA student starts with 27.0 g of Al (1.00 mol) and excess Cl₂. The theoretical yield of AlCl₃ is 133.3 g. The student collects 106.7 g. What is the percent yield?", "choices": {"A": "66.7%", "B": "75.0%", "C": "80.0%", "D": "125.0%"}, "answer": "C", "_slot": 14, "_variant": 1}, {"id": 80, "topic": "Integrated Problem: LR + Theoretical Yield + Percent Yield", "stem": "For the reaction: CaCO₃ → CaO + CO₂\nA student decomposes 100.1 g of CaCO₃ (100.09 g/mol) and collects 44.8 g of CO₂ (44.01 g/mol). What is the percent yield of CO₂?", "choices": {"A": "44.8%", "B": "89.6%", "C": "101.8%", "D": "50.2%"}, "answer": "C", "_slot": 14, "_variant": 2}, {"id": 81, "topic": "Integrated Problem: LR + Theoretical Yield + Percent Yield", "stem": "For the reaction: Fe₂O₃ + 3CO → 2Fe + 3CO₂\nA metallurgist starts with 159.7 g of Fe₂O₃ (159.69 g/mol) and excess CO. She obtains 89.4 g of Fe (55.85 g/mol). What is the percent yield?", "choices": {"A": "55.9%", "B": "70.0%", "C": "80.0%", "D": "100.0%"}, "answer": "C", "_slot": 14, "_variant": 3}, {"id": 82, "topic": "Integrated Problem: LR + Theoretical Yield + Percent Yield", "stem": "For the reaction: 2Al + 3Cl₂ → 2AlCl₃\nYou have 54.0 g Al and 106.5 g Cl₂.\n*(MM: Al = 26.98, Cl₂ = 70.90, AlCl₃ = 133.33 g/mol)*\nYou collect 100.0 g of AlCl₃. What is the percent yield?", "choices": {"A": "50.0%", "B": "66.7%", "C": "75.0%", "D": "100.0%"}, "answer": "C", "_slot": 14, "_variant": 4}, {"id": 83, "topic": "Integrated Problem: LR + Theoretical Yield + Percent Yield", "stem": "For the reaction: Zn + 2HCl → ZnCl₂ + H₂\nYou react 65.4 g Zn and 54.7 g HCl.\n*(MM: Zn = 65.38, HCl = 36.46, ZnCl₂ = 136.29 g/mol)*\nYou collect 81.8 g of ZnCl₂. What is the percent yield?", "choices": {"A": "60.0%", "B": "70.0%", "C": "80.0%", "D": "90.0%"}, "answer": "C", "_slot": 14, "_variant": 5}, {"id": 84, "topic": "Integrated Problem: LR + Theoretical Yield + Percent Yield", "stem": "For the reaction: CaCO₃ + 2HCl → CaCl₂ + H₂O + CO₂\nYou react 100.1 g CaCO₃ and 109.4 g HCl.\n*(MM: CaCO₃ = 100.09, HCl = 36.46, CaCl₂ = 110.98 g/mol)*\nYou collect 88.8 g of CaCl₂. What is the percent yield?", "choices": {"A": "72.0%", "B": "80.0%", "C": "88.0%", "D": "100%"}, "answer": "B", "_slot": 14, "_variant": 6}, {"id": 85, "topic": "Comprehensive Reasoning & Error Analysis", "stem": "In the reaction 2Mg + O₂ → 2MgO, a student starts with 10.0 g of Mg and 8.0 g of O₂. Assuming the reaction goes to completion with no excess reactant, what is the total mass of MgO produced?", "choices": {"A": "10.0 g, because the product can never weigh more than either reactant alone", "B": "18.0 g, because total mass is conserved in a chemical reaction", "C": "More than 18.0 g, because the reaction releases energy that adds mass", "D": "Less than 18.0 g, because some mass is always lost as heat"}, "answer": "B", "_slot": 15, "_variant": 1}, {"id": 86, "topic": "Comprehensive Reasoning & Error Analysis", "stem": "A student correctly identifies H₂ as the limiting reactant in the reaction N₂ + 3H₂ → 2NH₃, but then calculates the grams of NH₃ using the moles of N₂ (the excess reactant). What will happen to their answer?", "choices": {"A": "Their answer will be correct, because it doesn't matter which reactant you use", "B": "Their answer will be too high, because the excess reactant could theoretically produce more product than the limiting reactant allows", "C": "Their answer will be too low, because N₂ always produces less", "D": "Their answer will be zero, because the excess reactant cannot produce any product"}, "answer": "B", "_slot": 15, "_variant": 2}, {"id": 87, "topic": "Comprehensive Reasoning & Error Analysis", "stem": "In a limiting reactant problem, after the reaction is complete, which of the following is true about the excess reactant?", "choices": {"A": "It is completely consumed along with the limiting reactant", "B": "It is converted into a different product than expected", "C": "Some of it remains unreacted because there was not enough of the limiting reactant to consume it all", "D": "It evaporates because it has no reaction partner left"}, "answer": "C", "_slot": 15, "_variant": 3}, {"id": 88, "topic": "Comprehensive Reasoning & Error Analysis", "stem": "A student uses the unbalanced equation Al + O₂ → Al₂O₃ to calculate how many grams of Al₂O₃ form from a given mass of Al. Why will their answer be incorrect?", "choices": {"A": "Because unbalanced equations cannot be written in chemistry", "B": "Because the mole ratio from an unbalanced equation does not reflect the actual proportion of atoms reacting, leading to a wrong conversion factor", "C": "Because Al₂O₃ cannot form from Al and O₂", "D": "Because the molar masses change when the equation is not balanced"}, "answer": "B", "_slot": 15, "_variant": 4}, {"id": 89, "topic": "Comprehensive Reasoning & Error Analysis", "stem": "In a reaction where reactant A is limiting, a student doubles the amount of reactant A while keeping reactant B the same (B is still in excess). What happens to the theoretical yield?", "choices": {"A": "It stays the same because the excess reactant controls the yield", "B": "It doubles because the limiting reactant determines how much product can form", "C": "It quadruples because doubling a reactant has an exponential effect", "D": "It decreases because adding more reactant A slows the reaction"}, "answer": "B", "_slot": 15, "_variant": 5}, {"id": 90, "topic": "Comprehensive Reasoning & Error Analysis", "stem": "A pharmaceutical company finds that their synthesis of a life-saving drug consistently runs at 60% yield instead of the expected 90%. Which of the following is the most significant consequence?", "choices": {"A": "The drug will be less effective for patients because of the lower yield", "B": "The company will need to start with more raw material and spend more money to produce each batch, increasing cost and potentially limiting supply", "C": "The percent yield formula will need to be recalculated using a different equation", "D": "The balanced equation for the synthesis must be incorrect"}, "answer": "B", "_slot": 15, "_variant": 6}];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandomQuestions(bank, n) {
+  const k = Math.min(n, bank.length);
+  return shuffle(bank).slice(0, k);
+}
+
+function buildQuizQuestions() {
+  const picked = pickRandomQuestions(QUESTION_BANK, NUM_QUESTIONS);
+  return picked.map((q, idx) => {
+    const letters = ["A","B","C","D"];
+    const choicesArr = letters.map(L => ({ text: q.choices[L], isCorrect: L === q.answer }));
+    const shuffled = shuffle(choicesArr);
+    const newChoices = {};
+    let newCorrect = null;
+    shuffled.forEach((c, i) => {
+      const newL = letters[i];
+      newChoices[newL] = c.text;
+      if (c.isCorrect) newCorrect = newL;
+    });
+    return {
+      displayIndex: idx + 1,
+      bankId: q.id,
+      topic: q.topic,
+      stem: q.stem,
+      choices: newChoices,
+      correct: newCorrect,
+      selected: null,
+    };
+  });
+}
+
+let quiz = [];
+let timerInterval = null;
+let endTime = null;
+let submitted = false;
+let studentName = "";
+
+function renderQuestions() {
+  const c = document.getElementById("questionsContainer");
+  c.innerHTML = "";
+  quiz.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    card.id = "q-" + qi;
+    let html = '<div class="qhead">Question ' + q.displayIndex + ' of ' + NUM_QUESTIONS + '</div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      const id = "q" + qi + "_" + L;
+      html += '<label class="choice" data-q="' + qi + '" data-l="' + L + '">';
+      html += '<input type="radio" name="q' + qi + '" value="' + L + '" id="' + id + '"> ';
+      html += '<strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]);
+      html += '</label>';
+    });
+    card.innerHTML = html;
+    c.appendChild(card);
+  });
+  c.addEventListener("change", e => {
+    if (e.target && e.target.type === "radio") {
+      const qi = parseInt(e.target.name.slice(1), 10);
+      quiz[qi].selected = e.target.value;
+      const labels = document.querySelectorAll('label.choice[data-q="' + qi + '"]');
+      labels.forEach(lb => lb.classList.toggle("selected", lb.getAttribute("data-l") === e.target.value));
+    }
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function startTimer() {
+  endTime = Date.now() + TIME_LIMIT_SEC * 1000;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+}
+function updateTimer() {
+  const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById("timerTime").textContent =
+    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  const t = document.getElementById("timer");
+  t.classList.toggle("warning", remaining <= 300 && remaining > 60);
+  t.classList.toggle("critical", remaining <= 60);
+  if (remaining <= 0 && !submitted) {
+    clearInterval(timerInterval);
+    submitQuiz(true);
+  }
+}
+
+function submitQuiz(autoSubmitted) {
+  if (submitted) return;
+  const unanswered = quiz.filter(q => !q.selected).length;
+  if (!autoSubmitted && unanswered > 0) {
+    if (!confirm("You have " + unanswered + " unanswered question(s). Submit anyway?")) return;
+  }
+  submitted = true;
+  if (timerInterval) clearInterval(timerInterval);
+
+  let correct = 0;
+  quiz.forEach(q => { if (q.selected === q.correct) correct++; });
+  const total = quiz.length;
+  const pct = Math.round((correct / total) * 100);
+  const passed = pct >= PASS_PERCENT;
+
+  document.getElementById("screen-quiz").classList.add("hidden");
+  const rs = document.getElementById("screen-results");
+  rs.classList.remove("hidden");
+  document.getElementById("scoreDisplay").textContent = correct + "/" + total + "  (" + pct + "%)";
+  document.getElementById("scoreDisplay").className = "score " + (passed ? "pass" : "fail");
+  document.getElementById("passLabel").innerHTML = passed
+    ? '<strong style="color:var(--good);">PASS — meets 80% standard</strong>'
+    : '<strong style="color:var(--bad);">DID NOT PASS — complete remediation before retake</strong>';
+  document.getElementById("studentResultLabel").textContent =
+    studentName + (autoSubmitted ? " · auto-submitted (time expired)" : "");
+  const now = new Date();
+  const ts = now.toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+  document.getElementById("timestampLabel").textContent = "Completed: " + ts;
+
+  const rev = document.getElementById("reviewContainer");
+  rev.innerHTML = "<h2 style='margin-top:0;'>Question Review</h2>";
+  quiz.forEach((q) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    let html = '<div class="qhead">Q' + q.displayIndex + ' &middot; <span style="color:var(--muted);font-weight:400;">Topic: ' + escapeHtml(q.topic || "") + ' &middot; Bank #' + q.bankId + '</span></div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      let cls = "choice";
+      if (L === q.correct) cls += " correct";
+      if (L === q.selected && q.selected !== q.correct) cls += " incorrect";
+      let mark = "";
+      if (L === q.correct) mark = " ✓ correct";
+      if (L === q.selected && q.selected !== q.correct) mark = " ✗ your answer";
+      else if (L === q.selected && q.selected === q.correct) mark = " ✓ your answer";
+      html += '<div class="' + cls + '"><strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]) + '<em style="color:var(--muted);">' + mark + '</em></div>';
+    });
+    if (!q.selected) {
+      html += '<div style="color:var(--bad); font-size:13px; margin-top:6px;"><em>Not answered</em></div>';
+    }
+    card.innerHTML = html;
+    rev.appendChild(card);
+  });
+
+  window.scrollTo(0, 0);
+}
+
+document.getElementById("btnStart").addEventListener("click", () => {
+  const nm = document.getElementById("studentName").value.trim();
+  if (!nm) { alert("Please enter your full name."); return; }
+  studentName = nm;
+  document.getElementById("studentLabel").textContent = nm;
+  quiz = buildQuizQuestions();
+  document.getElementById("screen-start").classList.add("hidden");
+  document.getElementById("screen-quiz").classList.remove("hidden");
+  renderQuestions();
+  startTimer();
+  window.addEventListener("beforeunload", e => {
+    if (!submitted) { e.preventDefault(); e.returnValue = ""; }
+  });
+});
+document.getElementById("btnSubmit").addEventListener("click", () => submitQuiz(false));
+</script>
+</body>
+</html>
