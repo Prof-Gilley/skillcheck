@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CHEM 3A — Tier 3 Skill Check</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --accent: #2a5d8f;
+    --good: #1f7a3a;
+    --bad: #b22d2d;
+    --warn: #c46c00;
+    --border: #d9d9d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 24px 20px 80px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+  input[type="text"] {
+    width: 100%; font-size: 16px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff;
+  }
+  button {
+    background: var(--accent); color: white; border: none;
+    padding: 12px 20px; border-radius: 6px; font-size: 15px;
+    font-weight: 600; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { background: #999; cursor: not-allowed; }
+  button.success { background: var(--good); }
+  .timer {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600;
+  }
+  .timer.warning { background: #fff4e0; border-color: var(--warn); color: var(--warn); }
+  .timer.critical { background: #ffe5e5; border-color: var(--bad); color: var(--bad); }
+  .timer-time { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .qcard { margin-bottom: 14px; }
+  .qhead { font-weight: 700; margin-bottom: 8px; font-size: 15px; color: var(--accent); }
+  .qstem { white-space: pre-wrap; margin-bottom: 12px; font-size: 16px; }
+  .choice {
+    display: block; padding: 10px 12px; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; background: #fafaf7;
+    transition: background 0.1s;
+  }
+  .choice:hover { background: #eef2f7; }
+  .choice input { margin-right: 10px; }
+  .choice.selected { background: #dde9f5; border-color: var(--accent); }
+  .choice.correct { background: #def5e1; border-color: var(--good); }
+  .choice.incorrect { background: #f8d7d7; border-color: var(--bad); }
+  .results-summary {
+    background: #fff; border: 2px solid var(--accent);
+    border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .score { font-size: 42px; font-weight: 700; margin: 8px 0; }
+  .pass { color: var(--good); }
+  .fail { color: var(--bad); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .footer-note {
+    background: #fffce5; border-left: 4px solid var(--warn);
+    padding: 10px 14px; margin-top: 14px; font-size: 14px; border-radius: 4px;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="screen-start">
+    <h1>CHEM 3A — Tier 3 Skill Check</h1>
+    <div class="sub">Molecular Architecture & Phase Behavior · 15 questions · 30 minutes · 80% to pass</div>
+
+    <div class="card">
+      <p><strong>Instructions:</strong></p>
+      <ul>
+        <li>Closed-note assessment.</li>
+        <li>You have <strong>30 minutes</strong>. Timer auto-submits at zero.</li>
+        <li>Pick the best answer. You can change answers until you submit.</li>
+        <li>When done, click <strong>Submit</strong>, then take a screenshot of your score.</li>
+      </ul>
+      <label for="studentName">Your full name (required):</label>
+      <input id="studentName" type="text" placeholder="Last, First" autocomplete="name">
+      <div style="margin-top:14px;">
+        <button id="btnStart">Start Skill Check</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-quiz" class="hidden">
+    <div class="timer" id="timer">
+      <div>Skill Check in progress — <span id="studentLabel"></span></div>
+      <div class="timer-time" id="timerTime">30:00</div>
+    </div>
+    <div id="questionsContainer"></div>
+    <div class="actions">
+      <button id="btnSubmit" class="success">Submit Quiz</button>
+    </div>
+  </div>
+
+  <div id="screen-results" class="hidden">
+    <div class="results-summary">
+      <div style="font-size:14px; color:var(--muted); letter-spacing:0.5px;">CHEM 3A · TIER 3 SKILL CHECK</div>
+      <div class="score" id="scoreDisplay">--/15</div>
+      <div id="passLabel"></div>
+      <div id="studentResultLabel" style="margin-top:10px; font-size:18px; font-weight:600;"></div>
+      <div id="timestampLabel" style="margin-top:4px; color: var(--muted); font-size:13px;"></div>
+    </div>
+    <div class="footer-note" style="text-align:center;">
+      <strong>📸 Take a screenshot of this page</strong> and show it to Prof. Gilley before you leave.
+    </div>
+    <div id="reviewContainer" style="margin-top:24px;"></div>
+  </div>
+
+</div>
+
+<script>
+const QUIZ_TITLE = "CHEM 3A — Tier 3 Skill Check";
+const NUM_QUESTIONS = 15;
+const TIME_LIMIT_SEC = 30 * 60;
+const PASS_PERCENT = 80;
+
+const QUESTION_BANK = [{"id": 1, "topic": "States of Matter & Phase Properties", "stem": "Which state of matter can be compressed into a smaller volume?", "choices": {"A": "solid only", "B": "liquid only", "C": "both liquid and gas", "D": "gas only"}, "answer": "D"}, {"id": 2, "topic": "States of Matter & Phase Properties", "stem": "In which state of matter do particles have a fixed position and vibrate in place?", "choices": {"A": "gas", "B": "liquid", "C": "solid", "D": "plasma"}, "answer": "C"}, {"id": 3, "topic": "States of Matter & Phase Properties", "stem": "A substance takes the shape of its container but has a definite volume. This substance is a:", "choices": {"A": "solid", "B": "liquid", "C": "gas", "D": "plasma"}, "answer": "B"}, {"id": 4, "topic": "States of Matter & Phase Properties", "stem": "Which of the following best describes the particles in a gas?", "choices": {"A": "Fixed positions, vibrating in place", "B": "Close together, sliding past each other", "C": "Arranged in a rigid crystal lattice", "D": "Far apart, moving freely in all directions"}, "answer": "D"}, {"id": 5, "topic": "States of Matter & Phase Properties", "stem": "The phase change from liquid to gas is called:", "choices": {"A": "melting", "B": "sublimation", "C": "condensation", "D": "vaporization"}, "answer": "D"}, {"id": 6, "topic": "States of Matter & Phase Properties", "stem": "The phase change from solid directly to gas is called:", "choices": {"A": "condensation", "B": "sublimation", "C": "deposition", "D": "vaporization"}, "answer": "B"}, {"id": 7, "topic": "States of Matter & Phase Properties", "stem": "Which phase change is the reverse of vaporization?", "choices": {"A": "condensation", "B": "freezing", "C": "melting", "D": "sublimation"}, "answer": "A"}, {"id": 8, "topic": "States of Matter & Phase Properties", "stem": "Frost forming on a cold window is an example of:", "choices": {"A": "condensation", "B": "freezing", "C": "deposition", "D": "sublimation"}, "answer": "C"}, {"id": 9, "topic": "States of Matter & Phase Properties", "stem": "Which phase change is endothermic?", "choices": {"A": "freezing", "B": "melting", "C": "deposition", "D": "condensation"}, "answer": "B"}, {"id": 10, "topic": "States of Matter & Phase Properties", "stem": "During the freezing of water at 0°C, the process is:", "choices": {"A": "endothermic — energy is absorbed", "B": "neither — no energy change occurs", "C": "exothermic — energy is released", "D": "endothermic at first, then exothermic"}, "answer": "C"}, {"id": 11, "topic": "States of Matter & Phase Properties", "stem": "During the melting of ice at 0°C, what happens to the temperature?", "choices": {"A": "It increases steadily", "B": "It remains constant", "C": "It decreases steadily", "D": "It fluctuates randomly"}, "answer": "B"}, {"id": 12, "topic": "States of Matter & Phase Properties", "stem": "On a heating curve, a flat (horizontal) region represents:", "choices": {"A": "a single phase increasing in temperature", "B": "a phase change occurring at constant temperature", "C": "the substance cooling down", "D": "the substance reaching absolute zero"}, "answer": "B"}, {"id": 13, "topic": "States of Matter & Phase Properties", "stem": "On a heating curve, a sloped (rising) region represents:", "choices": {"A": "a phase change at constant temperature", "B": "potential energy remaining constant", "C": "intermolecular forces being broken", "D": "a single phase increasing in temperature"}, "answer": "D"}, {"id": 14, "topic": "States of Matter & Phase Properties", "stem": "During a phase change, added heat energy is used to:", "choices": {"A": "increase the kinetic energy of particles", "B": "increase the temperature of the substance", "C": "break covalent bonds within molecules", "D": "overcome intermolecular forces between particles"}, "answer": "D"}, {"id": 15, "topic": "States of Matter & Phase Properties", "stem": "A substance with very strong intermolecular forces would be expected to have:", "choices": {"A": "a low melting point and low boiling point", "B": "a low melting point and high boiling point", "C": "a high melting point and high boiling point", "D": "no definite melting or boiling point"}, "answer": "C"}, {"id": 16, "topic": "States of Matter & Phase Properties", "stem": "Which state of matter has the weakest intermolecular forces between its particles?", "choices": {"A": "gas", "B": "liquid", "C": "solid", "D": "all states have equal IMF strength"}, "answer": "A"}, {"id": 17, "topic": "States of Matter & Phase Properties", "stem": "Dry ice (solid CO₂) disappearing at room temperature without becoming a liquid is an example of:", "choices": {"A": "sublimation", "B": "condensation", "C": "vaporization", "D": "deposition"}, "answer": "A"}, {"id": 18, "topic": "States of Matter & Phase Properties", "stem": "Which statement about boiling is correct?", "choices": {"A": "Boiling breaks the covalent bonds that hold atoms together within molecules", "B": "Boiling occurs only when external pressure exceeds the vapor pressure of the substance", "C": "Particles have enough energy to overcome intermolecular forces throughout the liquid", "D": "Boiling always occurs at 100°C regardless of the substance"}, "answer": "C"}, {"id": 19, "topic": "States of Matter & Phase Properties", "stem": "A student heats a substance and records the temperature over time. The temperature rises, then stays flat at 55°C for several minutes, then rises again. What happened at 55°C?", "choices": {"A": "The substance stopped absorbing heat", "B": "A chemical reaction occurred", "C": "The thermometer malfunctioned", "D": "A phase change occurred"}, "answer": "D"}, {"id": 20, "topic": "States of Matter & Phase Properties", "stem": "Which of the following phase changes releases energy to the surroundings?", "choices": {"A": "condensation", "B": "vaporization", "C": "sublimation", "D": "melting"}, "answer": "A"}, {"id": 21, "topic": "States of Matter & Phase Properties", "stem": "Compared to a gas, a liquid has:", "choices": {"A": "weaker intermolecular forces and less particle motion", "B": "stronger intermolecular forces and more particle motion", "C": "stronger intermolecular forces and less particle motion", "D": "the same intermolecular forces but less particle motion"}, "answer": "C"}, {"id": 22, "topic": "States of Matter & Phase Properties", "stem": "A substance has a very high boiling point. What can you conclude about its intermolecular forces?", "choices": {"A": "They are very strong", "B": "They are very weak", "C": "They are nonexistent", "D": "Nothing — boiling point is unrelated to IMFs"}, "answer": "A"}, {"id": 23, "topic": "States of Matter & Phase Properties", "stem": "During vaporization, which type of energy increases while temperature stays constant?", "choices": {"A": "potential energy", "B": "kinetic energy", "C": "nuclear energy", "D": "chemical bond energy"}, "answer": "A"}, {"id": 24, "topic": "States of Matter & Phase Properties", "stem": "Water drops forming on the outside of a cold glass on a humid day is an example of:", "choices": {"A": "vaporization", "B": "melting", "C": "condensation", "D": "deposition"}, "answer": "C"}, {"id": 25, "topic": "States of Matter & Phase Properties", "stem": "Which of the following correctly lists phase changes from MOST energy required to LEAST?", "choices": {"A": "melting > vaporization > sublimation", "B": "sublimation > vaporization > melting", "C": "vaporization > sublimation > melting", "D": "melting > sublimation > vaporization"}, "answer": "B"}, {"id": 26, "topic": "Bond Type & Polarity", "stem": "As you move from left to right across a period, electronegativity generally:", "choices": {"A": "decreases", "B": "stays the same", "C": "increases", "D": "alternates up and down"}, "answer": "C"}, {"id": 27, "topic": "Bond Type & Polarity", "stem": "Which element has the highest electronegativity?", "choices": {"A": "Na", "B": "Cl", "C": "O", "D": "F"}, "answer": "D"}, {"id": 28, "topic": "Bond Type & Polarity", "stem": "A bond between two atoms with an electronegativity difference (ΔEN) of 0.3 would be classified as:", "choices": {"A": "ionic", "B": "polar covalent", "C": "metallic", "D": "nonpolar covalent"}, "answer": "D"}, {"id": 29, "topic": "Bond Type & Polarity", "stem": "A bond between two atoms with a ΔEN of 1.2 would be classified as:", "choices": {"A": "nonpolar covalent", "B": "ionic", "C": "polar covalent", "D": "metallic"}, "answer": "C"}, {"id": 30, "topic": "Bond Type & Polarity", "stem": "A bond between two atoms with a ΔEN of 2.0 would be classified as:", "choices": {"A": "nonpolar covalent", "B": "polar covalent", "C": "coordinate covalent", "D": "ionic"}, "answer": "D"}, {"id": 31, "topic": "Bond Type & Polarity", "stem": "Which of the following bonds is nonpolar covalent?", "choices": {"A": "H—Cl", "B": "F—F", "C": "O—H", "D": "Na—Cl"}, "answer": "B"}, {"id": 32, "topic": "Bond Type & Polarity", "stem": "Which of the following bonds is the MOST polar?", "choices": {"A": "C—H", "B": "N—H", "C": "O—H", "D": "C—C"}, "answer": "C"}, {"id": 33, "topic": "Bond Type & Polarity", "stem": "In a polar covalent bond, electrons are:", "choices": {"A": "transferred from one atom to the other", "B": "shared equally between the two atoms regardless of electronegativity differences", "C": "shared unequally, spending more time near the more electronegative atom", "D": "not involved in bonding because they remain on a single atom"}, "answer": "C"}, {"id": 34, "topic": "Bond Type & Polarity", "stem": "In the bond H—F, the dipole arrow points:", "choices": {"A": "toward H", "B": "toward F", "C": "in both directions equally", "D": "there is no dipole"}, "answer": "B"}, {"id": 35, "topic": "Bond Type & Polarity", "stem": "Which of the following pairs would form an ionic bond?", "choices": {"A": "Na and F", "B": "C and O", "C": "H and Cl", "D": "N and H"}, "answer": "A"}, {"id": 36, "topic": "Bond Type & Polarity", "stem": "CO₂ has polar bonds but is a nonpolar molecule. This is because:", "choices": {"A": "the C—O bonds are actually nonpolar", "B": "the molecule contains only two elements", "C": "carbon dioxide is a gas at room temperature", "D": "the linear geometry causes the dipoles to cancel"}, "answer": "D"}, {"id": 37, "topic": "Bond Type & Polarity", "stem": "H₂O has polar bonds and is a polar molecule. This is because:", "choices": {"A": "oxygen is more electronegative than hydrogen", "B": "the bent geometry prevents the dipoles from canceling", "C": "water contains hydrogen", "D": "water is a liquid at room temperature"}, "answer": "B"}, {"id": 38, "topic": "Bond Type & Polarity", "stem": "Which of the following molecules is nonpolar despite having polar bonds?", "choices": {"A": "NH₃", "B": "H₂O", "C": "HF", "D": "CCl₄"}, "answer": "D"}, {"id": 39, "topic": "Bond Type & Polarity", "stem": "Which molecular geometry is ALWAYS polar when the bonds are polar?", "choices": {"A": "trigonal pyramidal", "B": "tetrahedral (4 identical bonds)", "C": "linear (2 identical bonds)", "D": "trigonal planar (3 identical bonds)"}, "answer": "A"}, {"id": 40, "topic": "Bond Type & Polarity", "stem": "A molecule with a bent geometry and polar bonds will be:", "choices": {"A": "always polar", "B": "always nonpolar", "C": "polar only if the bonds are ionic", "D": "nonpolar because bent is symmetric"}, "answer": "A"}, {"id": 41, "topic": "Bond Type & Polarity", "stem": "CHCl₃ has a tetrahedral electron geometry. Is the molecule polar or nonpolar?", "choices": {"A": "Nonpolar — tetrahedral geometry always cancels dipoles", "B": "Nonpolar — carbon has no lone pairs and the geometry is symmetrical", "C": "Polar — substituents are not all identical, so dipoles don't cancel", "D": "Polar — all molecules with chlorine are polar"}, "answer": "C"}, {"id": 42, "topic": "Bond Type & Polarity", "stem": "Which of the following is a NONPOLAR molecule?", "choices": {"A": "BF₃", "B": "H₂S", "C": "HBr", "D": "NH₃"}, "answer": "A"}, {"id": 43, "topic": "Bond Type & Polarity", "stem": "A student says \"BF₃ must be polar because the B—F bonds are polar.\" What is wrong with this reasoning?", "choices": {"A": "The trigonal planar geometry causes the three equal dipoles to cancel", "B": "B—F bonds are actually nonpolar", "C": "Boron is more electronegative than fluorine", "D": "BF₃ is an ionic compound held together by electrostatic attraction"}, "answer": "A"}, {"id": 44, "topic": "Bond Type & Polarity", "stem": "Which of the following correctly ranks bond polarity from LEAST to MOST polar?", "choices": {"A": "C—O < C—N < C—H < C—C", "B": "C—C < C—H < C—N < C—O", "C": "C—H < C—C < C—O < C—N", "D": "C—N < C—O < C—C < C—H"}, "answer": "B"}, {"id": 45, "topic": "Bond Type & Polarity", "stem": "The compound NaCl is best described as:", "choices": {"A": "a nonpolar covalent compound", "B": "an ionic compound", "C": "a polar covalent compound", "D": "a metallic compound"}, "answer": "B"}, {"id": 46, "topic": "Bond Type & Polarity", "stem": "Which property is most characteristic of ionic compounds?", "choices": {"A": "high melting point", "B": "soft and waxy texture", "C": "poor electrical conductivity as a solid", "D": "low melting point"}, "answer": "A"}, {"id": 47, "topic": "Bond Type & Polarity", "stem": "A molecule has a symmetric geometry with all identical outer atoms. The molecule is most likely:", "choices": {"A": "polar", "B": "nonpolar", "C": "ionic", "D": "impossible to determine"}, "answer": "B"}, {"id": 48, "topic": "Bond Type & Polarity", "stem": "In the molecule PF₃, the molecular geometry is trigonal pyramidal. Is PF₃ polar or nonpolar?", "choices": {"A": "Nonpolar — all outer atoms are the same", "B": "Polar — the lone pair on P makes the geometry asymmetric", "C": "Nonpolar — phosphorus has low electronegativity", "D": "Polar — but only because of London dispersion forces"}, "answer": "B"}, {"id": 49, "topic": "Bond Type & Polarity", "stem": "Which statement about electronegativity is correct?", "choices": {"A": "Metals generally have higher electronegativity than nonmetals", "B": "Electronegativity increases going down a group", "C": "Fluorine has the highest electronegativity of all elements", "D": "Noble gases have the highest electronegativity"}, "answer": "C"}, {"id": 50, "topic": "Bond Type & Polarity", "stem": "Two atoms form a bond. One is a metal from group 1 and the other is a nonmetal from group 17. The bond is most likely:", "choices": {"A": "nonpolar covalent", "B": "polar covalent", "C": "metallic", "D": "ionic"}, "answer": "D"}, {"id": 51, "topic": "Lewis Structures & Error Analysis", "stem": "How many valence electrons does a carbon (C) atom have?", "choices": {"A": "2", "B": "6", "C": "4", "D": "12"}, "answer": "C"}, {"id": 52, "topic": "Lewis Structures & Error Analysis", "stem": "How many valence electrons does a nitrogen (N) atom have?", "choices": {"A": "2", "B": "3", "C": "7", "D": "5"}, "answer": "D"}, {"id": 53, "topic": "Lewis Structures & Error Analysis", "stem": "How many valence electrons does a chlorine (Cl) atom have?", "choices": {"A": "1", "B": "7", "C": "3", "D": "17"}, "answer": "B"}, {"id": 54, "topic": "Lewis Structures & Error Analysis", "stem": "How many valence electrons does a fluorine (F) atom have?", "choices": {"A": "1", "B": "5", "C": "9", "D": "7"}, "answer": "D"}, {"id": 55, "topic": "Lewis Structures & Error Analysis", "stem": "Which pair of elements has the same number of valence electrons?", "choices": {"A": "O and S", "B": "C and N", "C": "N and O", "D": "F and Ne"}, "answer": "A"}, {"id": 56, "topic": "Lewis Structures & Error Analysis", "stem": "What is the total number of valence electrons in H₂O?", "choices": {"A": "4", "B": "8", "C": "6", "D": "10"}, "answer": "B"}, {"id": 57, "topic": "Lewis Structures & Error Analysis", "stem": "What is the total number of valence electrons in NH₃?", "choices": {"A": "6", "B": "14", "C": "10", "D": "8"}, "answer": "D"}, {"id": 58, "topic": "Lewis Structures & Error Analysis", "stem": "What is the total number of valence electrons in CO₂?", "choices": {"A": "16", "B": "12", "C": "8", "D": "22"}, "answer": "A"}, {"id": 59, "topic": "Lewis Structures & Error Analysis", "stem": "What is the total number of valence electrons in the ammonium ion (NH₄⁺)?", "choices": {"A": "6", "B": "10", "C": "9", "D": "8"}, "answer": "D"}, {"id": 60, "topic": "Lewis Structures & Error Analysis", "stem": "What is the total number of valence electrons in the sulfate ion (SO₄²⁻)?", "choices": {"A": "28", "B": "30", "C": "32", "D": "34"}, "answer": "C"}, {"id": 61, "topic": "Lewis Structures & Error Analysis", "stem": "What is the total number of valence electrons in the hydroxide ion (OH⁻)?", "choices": {"A": "6", "B": "7", "C": "8", "D": "9"}, "answer": "C"}, {"id": 62, "topic": "Lewis Structures & Error Analysis", "stem": "When drawing a Lewis structure, which atom is typically placed in the center?", "choices": {"A": "the most electronegative atom", "B": "the smallest atom", "C": "hydrogen, since it is the smallest atom available", "D": "the least electronegative atom (except H)"}, "answer": "D"}, {"id": 63, "topic": "Lewis Structures & Error Analysis", "stem": "In a correct Lewis structure, hydrogen should have how many electrons around it?", "choices": {"A": "2", "B": "4", "C": "6", "D": "8"}, "answer": "A"}, {"id": 64, "topic": "Lewis Structures & Error Analysis", "stem": "A student draws a Lewis structure for CH₄ and puts a lone pair on carbon. What is wrong?", "choices": {"A": "Carbon should have 2 lone pairs", "B": "Carbon should have 3 lone pairs", "C": "Carbon uses all 4 valence electrons for bonding — it has no lone pairs", "D": "Nothing — the structure correctly satisfies the octet rule for every atom"}, "answer": "C"}, {"id": 65, "topic": "Lewis Structures & Error Analysis", "stem": "A student draws a Lewis structure for NH₃ and shows no lone pairs on nitrogen. What is the error?", "choices": {"A": "There is no error", "B": "Nitrogen should have 1 lone pair", "C": "Nitrogen should have 2 lone pairs", "D": "Nitrogen should have 3 lone pairs"}, "answer": "B"}, {"id": 66, "topic": "Lewis Structures & Error Analysis", "stem": "A student draws HF with 2 lone pairs on hydrogen and 2 lone pairs on fluorine. What is wrong?", "choices": {"A": "Nothing — the structure correctly satisfies the duet rule for hydrogen", "B": "Fluorine should have no lone pairs", "C": "Hydrogen never has lone pairs — all remaining electrons belong on fluorine", "D": "Both atoms should have 3 lone pairs"}, "answer": "C"}, {"id": 67, "topic": "Lewis Structures & Error Analysis", "stem": "How many lone pairs are on the central atom in the Lewis structure of H₂S?", "choices": {"A": "0", "B": "2", "C": "1", "D": "3"}, "answer": "B"}, {"id": 68, "topic": "Lewis Structures & Error Analysis", "stem": "How many lone pairs are on the central atom in the Lewis structure of PCl₃?", "choices": {"A": "0", "B": "2", "C": "1", "D": "3"}, "answer": "C"}, {"id": 69, "topic": "Lewis Structures & Error Analysis", "stem": "How many lone pairs are on the central atom in the Lewis structure of CH₂Cl₂?", "choices": {"A": "0", "B": "1", "C": "2", "D": "3"}, "answer": "A"}, {"id": 70, "topic": "Lewis Structures & Error Analysis", "stem": "A student draws a Lewis structure for water with only 6 total electrons. What is the most likely error?", "choices": {"A": "The student forgot to count hydrogen's valence electrons", "B": "The student incorrectly placed H atoms in the central position of the molecule", "C": "The student added too many electrons", "D": "The student only counted oxygen's valence electrons and ignored hydrogen's contribution"}, "answer": "D"}, {"id": 71, "topic": "Lewis Structures & Error Analysis", "stem": "In a correct Lewis structure for CO₂, how many bonds does carbon form?", "choices": {"A": "4", "B": "2", "C": "1", "D": "6"}, "answer": "A"}, {"id": 72, "topic": "Lewis Structures & Error Analysis", "stem": "A student draws CO₂ with single bonds to each oxygen and lone pairs to complete octets. Why is this incorrect?", "choices": {"A": "Oxygen cannot have lone pairs because they are reserved for nitrogen atoms", "B": "The structure uses more electrons than are available — double bonds are needed", "C": "Carbon should have lone pairs instead", "D": "The structure should be cyclic"}, "answer": "B"}, {"id": 73, "topic": "Lewis Structures & Error Analysis", "stem": "In the Lewis structure for HCN, the carbon-nitrogen bond is a:", "choices": {"A": "single bond", "B": "triple bond", "C": "double bond", "D": "no bond — they don't connect"}, "answer": "B"}, {"id": 74, "topic": "Lewis Structures & Error Analysis", "stem": "A student draws a Lewis structure for NCl₃ and shows 10 total electrons. The correct total is:", "choices": {"A": "22", "B": "24", "C": "28", "D": "26"}, "answer": "D"}, {"id": 75, "topic": "Lewis Structures & Error Analysis", "stem": "Which of the following atoms can NEVER be the central atom in a Lewis structure?", "choices": {"A": "H", "B": "N", "C": "C", "D": "S"}, "answer": "A"}, {"id": 76, "topic": "VSEPR Geometry & Bond Angles", "stem": "In VSEPR theory, electron groups repel each other and arrange themselves to be:", "choices": {"A": "as far apart as possible", "B": "as close together as possible", "C": "all on one side of the atom", "D": "in a straight line"}, "answer": "A"}, {"id": 77, "topic": "VSEPR Geometry & Bond Angles", "stem": "How many electron groups does the central atom in CH₄ have?", "choices": {"A": "4", "B": "3", "C": "2", "D": "8"}, "answer": "A"}, {"id": 78, "topic": "VSEPR Geometry & Bond Angles", "stem": "A double bond counts as how many electron groups in VSEPR theory?", "choices": {"A": "0", "B": "2", "C": "1", "D": "4"}, "answer": "C"}, {"id": 79, "topic": "VSEPR Geometry & Bond Angles", "stem": "A triple bond counts as how many electron groups in VSEPR theory?", "choices": {"A": "3", "B": "2", "C": "1", "D": "6"}, "answer": "C"}, {"id": 80, "topic": "VSEPR Geometry & Bond Angles", "stem": "An atom with 4 electron groups has what electron geometry?", "choices": {"A": "linear", "B": "trigonal planar", "C": "tetrahedral", "D": "trigonal pyramidal"}, "answer": "C"}, {"id": 81, "topic": "VSEPR Geometry & Bond Angles", "stem": "An atom with 3 electron groups (all bonding, no lone pairs) has what molecular geometry?", "choices": {"A": "linear", "B": "bent", "C": "trigonal planar", "D": "trigonal pyramidal"}, "answer": "C"}, {"id": 82, "topic": "VSEPR Geometry & Bond Angles", "stem": "An atom with 2 electron groups has what molecular geometry?", "choices": {"A": "linear", "B": "bent", "C": "trigonal planar", "D": "tetrahedral"}, "answer": "A"}, {"id": 83, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the molecular geometry of CH₄?", "choices": {"A": "linear", "B": "trigonal planar", "C": "bent", "D": "tetrahedral"}, "answer": "D"}, {"id": 84, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the molecular geometry of NH₃?", "choices": {"A": "tetrahedral", "B": "trigonal pyramidal", "C": "trigonal planar", "D": "bent"}, "answer": "B"}, {"id": 85, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the molecular geometry of H₂O?", "choices": {"A": "bent", "B": "trigonal planar", "C": "tetrahedral", "D": "linear"}, "answer": "A"}, {"id": 86, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the molecular geometry of H₂S?", "choices": {"A": "linear", "B": "bent", "C": "trigonal planar", "D": "tetrahedral"}, "answer": "B"}, {"id": 87, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the molecular geometry of CO₂?", "choices": {"A": "linear", "B": "bent", "C": "trigonal planar", "D": "tetrahedral"}, "answer": "A"}, {"id": 88, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the molecular geometry of BF₃?", "choices": {"A": "tetrahedral", "B": "trigonal pyramidal", "C": "trigonal planar", "D": "bent"}, "answer": "C"}, {"id": 89, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the molecular geometry of PCl₃?", "choices": {"A": "trigonal pyramidal", "B": "trigonal planar", "C": "tetrahedral", "D": "bent"}, "answer": "A"}, {"id": 90, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the approximate bond angle in a molecule with tetrahedral geometry?", "choices": {"A": "90°", "B": "109.5°", "C": "104.5°", "D": "120°"}, "answer": "B"}, {"id": 91, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the approximate H—O—H bond angle in water?", "choices": {"A": "90°", "B": "120°", "C": "109.5°", "D": "104.5°"}, "answer": "D"}, {"id": 92, "topic": "VSEPR Geometry & Bond Angles", "stem": "What is the approximate H—N—H bond angle in ammonia?", "choices": {"A": "90°", "B": "120°", "C": "109.5°", "D": "107°"}, "answer": "D"}, {"id": 93, "topic": "VSEPR Geometry & Bond Angles", "stem": "Lone pairs on a central atom cause bond angles to be:", "choices": {"A": "larger than expected", "B": "unpredictable", "C": "exactly the same as expected", "D": "smaller than expected"}, "answer": "D"}, {"id": 94, "topic": "VSEPR Geometry & Bond Angles", "stem": "The difference between electron geometry and molecular geometry is that:", "choices": {"A": "electron geometry counts all electron groups; molecular geometry counts only atoms", "B": "they are always the same regardless of how many lone pairs are present", "C": "molecular geometry includes lone pairs but electron geometry does not consider them", "D": "electron geometry only applies to ionic compounds, not covalent species"}, "answer": "A"}, {"id": 95, "topic": "VSEPR Geometry & Bond Angles", "stem": "A molecule has 4 electron groups: 3 bonding pairs and 1 lone pair. Its molecular geometry is:", "choices": {"A": "tetrahedral", "B": "trigonal pyramidal", "C": "bent", "D": "trigonal planar"}, "answer": "B"}, {"id": 96, "topic": "VSEPR Geometry & Bond Angles", "stem": "A molecule has 4 electron groups: 2 bonding pairs and 2 lone pairs. Its molecular geometry is:", "choices": {"A": "tetrahedral", "B": "bent", "C": "trigonal pyramidal", "D": "linear"}, "answer": "B"}, {"id": 97, "topic": "VSEPR Geometry & Bond Angles", "stem": "A student says H₂S is linear because it has only 2 bonds. What did the student forget?", "choices": {"A": "H₂S has double bonds between sulfur and each hydrogen atom", "B": "Sulfur is in the center", "C": "The 2 lone pairs on sulfur also count as electron groups", "D": "Hydrogen has lone pairs"}, "answer": "C"}, {"id": 98, "topic": "VSEPR Geometry & Bond Angles", "stem": "Which of the following molecules has the SMALLEST bond angle?", "choices": {"A": "CH₄ (109.5°)", "B": "NH₃ (~107°)", "C": "BF₃ (120°)", "D": "H₂O (~104.5°)"}, "answer": "D"}, {"id": 99, "topic": "VSEPR Geometry & Bond Angles", "stem": "The bond angle in BF₃ is approximately:", "choices": {"A": "90°", "B": "104.5°", "C": "109.5°", "D": "120°"}, "answer": "D"}, {"id": 100, "topic": "VSEPR Geometry & Bond Angles", "stem": "A molecule has a central atom with 2 electron groups and no lone pairs. The bond angle is:", "choices": {"A": "109.5°", "B": "180°", "C": "120°", "D": "90°"}, "answer": "B"}, {"id": 101, "topic": "Resonance Structures", "stem": "Resonance structures are different Lewis structures for the same molecule that differ in:", "choices": {"A": "the arrangement of atoms in space without regard to electron pairs", "B": "the identity of the central atom", "C": "the total number of electrons", "D": "the placement of electrons (bonds and lone pairs)"}, "answer": "D"}, {"id": 102, "topic": "Resonance Structures", "stem": "The actual structure of a molecule with resonance is best described as:", "choices": {"A": "rapidly switching between the resonance structures", "B": "identical to any one of the resonance structures", "C": "the structure with the most double bonds", "D": "a hybrid (average) of all resonance structures"}, "answer": "D"}, {"id": 103, "topic": "Resonance Structures", "stem": "How many equivalent resonance structures can be drawn for the nitrate ion (NO₃⁻)?", "choices": {"A": "1", "B": "3", "C": "2", "D": "4"}, "answer": "B"}, {"id": 104, "topic": "Resonance Structures", "stem": "How many equivalent resonance structures can be drawn for the carbonate ion (CO₃²⁻)?", "choices": {"A": "3", "B": "2", "C": "1", "D": "6"}, "answer": "A"}, {"id": 105, "topic": "Resonance Structures", "stem": "How many resonance structures can be drawn for ozone (O₃)?", "choices": {"A": "1", "B": "3", "C": "2", "D": "4"}, "answer": "C"}, {"id": 106, "topic": "Resonance Structures", "stem": "How many equivalent resonance structures can be drawn for the nitrite ion (NO₂⁻)?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 107, "topic": "Resonance Structures", "stem": "How many equivalent resonance structures can be drawn for the phosphate ion (PO₄³⁻)?", "choices": {"A": "4", "B": "3", "C": "2", "D": "6"}, "answer": "A"}, {"id": 108, "topic": "Resonance Structures", "stem": "How many equivalent resonance structures can be drawn for the sulfite ion (SO₃²⁻)?", "choices": {"A": "1", "B": "2", "C": "4", "D": "3"}, "answer": "D"}, {"id": 109, "topic": "Resonance Structures", "stem": "How many resonance structures can be drawn for the acetate ion (CH₃COO⁻)?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 110, "topic": "Resonance Structures", "stem": "How many resonance structures can be drawn for the formate ion (HCO₂⁻)?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 111, "topic": "Resonance Structures", "stem": "Which of the following species does NOT have resonance structures?", "choices": {"A": "H₂O", "B": "CO₃²⁻", "C": "NO₃⁻", "D": "O₃"}, "answer": "A"}, {"id": 112, "topic": "Resonance Structures", "stem": "Which of the following species does NOT have resonance structures?", "choices": {"A": "SO₃²⁻", "B": "NO₂⁻", "C": "CH₄", "D": "CO₃²⁻"}, "answer": "C"}, {"id": 113, "topic": "Resonance Structures", "stem": "Which of the following species does NOT have resonance structures?", "choices": {"A": "NH₃", "B": "O₃", "C": "NO₃⁻", "D": "HCO₂⁻"}, "answer": "A"}, {"id": 114, "topic": "Resonance Structures", "stem": "In the resonance structures of NO₃⁻, the double bond is located:", "choices": {"A": "always between N and the same O atom", "B": "there is no double bond", "C": "between two oxygen atoms", "D": "on a different N—O bond in each structure"}, "answer": "D"}, {"id": 115, "topic": "Resonance Structures", "stem": "In the carbonate ion (CO₃²⁻), all three C—O bonds are measured to be the same length. This is because:", "choices": {"A": "the actual structure is a resonance hybrid with equal bond character", "B": "all bonds are double bonds", "C": "all bonds are single bonds", "D": "the bonds are ionic because oxygen attracts electrons completely"}, "answer": "A"}, {"id": 116, "topic": "Resonance Structures", "stem": "If a molecule has 3 equivalent resonance structures in which a double bond rotates among 3 positions, the bond order of each bond is:", "choices": {"A": "1", "B": "1½", "C": "1⅓", "D": "2"}, "answer": "C"}, {"id": 117, "topic": "Resonance Structures", "stem": "If a molecule has 2 resonance structures in which a double bond alternates between 2 positions, the bond order of each bond is:", "choices": {"A": "1", "B": "1⅓", "C": "1½", "D": "2"}, "answer": "C"}, {"id": 118, "topic": "Resonance Structures", "stem": "In the resonance hybrid of ozone (O₃), each O—O bond is:", "choices": {"A": "between a single and double bond", "B": "a double bond between every pair of bonded atoms", "C": "a single bond", "D": "a triple bond"}, "answer": "A"}, {"id": 119, "topic": "Resonance Structures", "stem": "A student draws only one Lewis structure for NO₃⁻ with the double bond on one oxygen. What is this student missing?", "choices": {"A": "Nothing — one Lewis structure correctly represents the molecule", "B": "Two additional equivalent structures where the double bond is on the other oxygens", "C": "The fact that NO₃⁻ contains no double bonds anywhere in its actual structure", "D": "A lone pair shifted from nitrogen to one of the oxygen atoms"}, "answer": "B"}, {"id": 120, "topic": "Resonance Structures", "stem": "Resonance structures differ from isomers because in resonance structures:", "choices": {"A": "the atoms are rearranged into different positions in space", "B": "only the electrons are rearranged while atoms stay in the same positions", "C": "the molecular formula changes between resonance structures", "D": "the total electron count changes between equivalent representations of the molecule"}, "answer": "B"}, {"id": 121, "topic": "Resonance Structures", "stem": "Which condition is necessary for a molecule or ion to have resonance structures?", "choices": {"A": "It must be ionic with a metal donating electrons to a nonmetal", "B": "It must contain hydrogen", "C": "It must allow multiple valid electron arrangements without moving atoms", "D": "It must be nonpolar"}, "answer": "C"}, {"id": 122, "topic": "Resonance Structures", "stem": "The sulfate ion (SO₄²⁻) can have resonance structures. How many equivalent resonance structures can be drawn if each has one S═O double bond?", "choices": {"A": "4", "B": "3", "C": "2", "D": "6"}, "answer": "A"}, {"id": 123, "topic": "Resonance Structures", "stem": "In the resonance hybrid of the nitrate ion, each N—O bond is:", "choices": {"A": "a pure single bond", "B": "a pure double bond", "C": "between a single and double bond, with bond order 1⅓", "D": "a triple bond between the carbon and each oxygen atom"}, "answer": "C"}, {"id": 124, "topic": "Resonance Structures", "stem": "A molecule has 4 equivalent resonance structures. The double bond moves among 4 positions. The bond order of each bond in the hybrid is:", "choices": {"A": "1", "B": "2", "C": "1.5", "D": "1.25"}, "answer": "D"}, {"id": 125, "topic": "Resonance Structures", "stem": "Which of the following pairs are resonance structures of each other?", "choices": {"A": "H₂O and H₂S, since they have similar molecular geometries", "B": "CO₂ and CS₂, two structurally similar nonpolar molecules", "C": "CH₄ and CCl₄, since both molecules have a tetrahedral geometry", "D": "Two Lewis structures of NO₂⁻ that differ only in double bond position"}, "answer": "D"}, {"id": 126, "topic": "Hydrogen Bonding & IMFs", "stem": "Which type of intermolecular force is present in ALL molecules, regardless of polarity?", "choices": {"A": "ionic bonding", "B": "hydrogen bonding", "C": "London dispersion forces", "D": "dipole-dipole forces"}, "answer": "C"}, {"id": 127, "topic": "Hydrogen Bonding & IMFs", "stem": "London dispersion forces arise from:", "choices": {"A": "permanent dipoles in polar molecules", "B": "ionic interactions between metals and nonmetals", "C": "hydrogen atoms bonded to electronegative atoms", "D": "temporary, random shifts in electron distribution"}, "answer": "D"}, {"id": 128, "topic": "Hydrogen Bonding & IMFs", "stem": "Larger molecules tend to have stronger London dispersion forces because they have:", "choices": {"A": "more polar bonds between unlike atoms in the molecule", "B": "fewer lone pairs", "C": "more electrons and more surface area", "D": "higher electronegativity"}, "answer": "C"}, {"id": 129, "topic": "Hydrogen Bonding & IMFs", "stem": "Dipole-dipole forces occur between molecules that are:", "choices": {"A": "nonpolar", "B": "polar", "C": "ionic", "D": "metallic"}, "answer": "B"}, {"id": 130, "topic": "Hydrogen Bonding & IMFs", "stem": "In dipole-dipole interactions, the positive end of one molecule is attracted to:", "choices": {"A": "the positive end of a neighboring molecule", "B": "the lone pairs within its own molecule", "C": "the nucleus of a neighboring molecule", "D": "the negative end of a neighboring molecule"}, "answer": "D"}, {"id": 131, "topic": "Hydrogen Bonding & IMFs", "stem": "Hydrogen bonding requires H to be directly bonded to which of the following?", "choices": {"A": "C, N, or O", "B": "any halogen", "C": "N, O, or F", "D": "any nonmetal"}, "answer": "C"}, {"id": 132, "topic": "Hydrogen Bonding & IMFs", "stem": "Which substance exhibits hydrogen bonding between its molecules?", "choices": {"A": "CH₄", "B": "HF", "C": "H₂S", "D": "PH₃"}, "answer": "B"}, {"id": 133, "topic": "Hydrogen Bonding & IMFs", "stem": "Which substance exhibits hydrogen bonding between its molecules?", "choices": {"A": "NH₃", "B": "H₂S", "C": "CH₃F", "D": "HBr"}, "answer": "A"}, {"id": 134, "topic": "Hydrogen Bonding & IMFs", "stem": "Which substance exhibits hydrogen bonding between its molecules?", "choices": {"A": "CH₃Cl", "B": "CH₃OH", "C": "CH₃CH₃", "D": "CH₃SH"}, "answer": "B"}, {"id": 135, "topic": "Hydrogen Bonding & IMFs", "stem": "A student says H₂S has hydrogen bonding because it contains hydrogen. Why is this incorrect?", "choices": {"A": "H is bonded to S, not to N, O, or F", "B": "H₂S is nonpolar", "C": "Sulfur is too large for hydrogen bonding", "D": "H₂S is a gas"}, "answer": "A"}, {"id": 136, "topic": "Hydrogen Bonding & IMFs", "stem": "A student says CH₃F has hydrogen bonding because it contains fluorine. Why is this incorrect?", "choices": {"A": "Fluorine is not electronegative enough", "B": "Fluorine cannot participate in hydrogen bonding", "C": "CH₃F is nonpolar", "D": "H is bonded to C, not directly to F"}, "answer": "D"}, {"id": 137, "topic": "Hydrogen Bonding & IMFs", "stem": "Which of the following correctly ranks IMF types from weakest to strongest?", "choices": {"A": "London dispersion < dipole-dipole < hydrogen bonding", "B": "hydrogen bonding < dipole-dipole < London dispersion", "C": "dipole-dipole < London dispersion < hydrogen bonding", "D": "London dispersion < hydrogen bonding < dipole-dipole"}, "answer": "A"}, {"id": 138, "topic": "Hydrogen Bonding & IMFs", "stem": "What intermolecular forces are present in HBr?", "choices": {"A": "LDF only", "B": "hydrogen bonding only", "C": "LDF, dipole-dipole, and hydrogen bonding", "D": "LDF and dipole-dipole"}, "answer": "D"}, {"id": 139, "topic": "Hydrogen Bonding & IMFs", "stem": "What intermolecular forces are present in CH₄?", "choices": {"A": "LDF and dipole-dipole", "B": "LDF only", "C": "LDF and hydrogen bonding", "D": "dipole-dipole only"}, "answer": "B"}, {"id": 140, "topic": "Hydrogen Bonding & IMFs", "stem": "What intermolecular forces are present in H₂O?", "choices": {"A": "LDF, dipole-dipole, and hydrogen bonding", "B": "LDF and dipole-dipole", "C": "LDF only, since the molecule is nonpolar overall", "D": "hydrogen bonding only"}, "answer": "A"}, {"id": 141, "topic": "Hydrogen Bonding & IMFs", "stem": "What intermolecular forces are present between molecules of NH₃?", "choices": {"A": "LDF only, with no permanent dipole present in the molecule", "B": "LDF and dipole-dipole only", "C": "LDF, dipole-dipole, and hydrogen bonding", "D": "ionic forces"}, "answer": "C"}, {"id": 142, "topic": "Hydrogen Bonding & IMFs", "stem": "Rank the following from lowest to highest boiling point: Ne, HBr, H₂O", "choices": {"A": "Ne < HBr < H₂O", "B": "H₂O < HBr < Ne", "C": "Ne < H₂O < HBr", "D": "HBr < Ne < H₂O"}, "answer": "A"}, {"id": 143, "topic": "Hydrogen Bonding & IMFs", "stem": "Rank the following from lowest to highest boiling point: CH₄, CH₃Cl, CH₃OH", "choices": {"A": "CH₃Cl < CH₄ < CH₃OH", "B": "CH₃OH < CH₃Cl < CH₄", "C": "CH₄ < CH₃Cl < CH₃OH", "D": "CH₃OH < CH₄ < CH₃Cl"}, "answer": "C"}, {"id": 144, "topic": "Hydrogen Bonding & IMFs", "stem": "Ethanol (C₂H₅OH, 46 g/mol) has a higher boiling point than dimethyl ether (CH₃OCH₃, 46 g/mol). This is because ethanol:", "choices": {"A": "has a higher molar mass", "B": "has an O—H bond that enables hydrogen bonding", "C": "is nonpolar", "D": "has stronger London dispersion forces"}, "answer": "B"}, {"id": 145, "topic": "Hydrogen Bonding & IMFs", "stem": "Br₂ is a liquid at room temperature while Cl₂ is a gas, even though neither is polar. This difference is best explained by:", "choices": {"A": "Br₂ has stronger London dispersion forces due to more electrons", "B": "Br₂ has stronger dipole-dipole forces", "C": "Br₂ has hydrogen bonding", "D": "Cl₂ is ionic and forms an extended crystalline lattice"}, "answer": "A"}, {"id": 146, "topic": "Hydrogen Bonding & IMFs", "stem": "A student says that because HCl contains H and a highly electronegative atom, it has hydrogen bonding. What is wrong?", "choices": {"A": "Cl is not electronegative enough to support hydrogen bonding", "B": "Hydrogen bonding requires H bonded to N, O, or F — Cl does not qualify", "C": "HCl is nonpolar because the bond dipoles cancel out exactly", "D": "HCl is a gas so it cannot have IMFs"}, "answer": "B"}, {"id": 147, "topic": "Hydrogen Bonding & IMFs", "stem": "Which of the following would have the HIGHEST boiling point?", "choices": {"A": "He (4 g/mol)", "B": "N₂ (28 g/mol)", "C": "CO (28 g/mol)", "D": "H₂O (18 g/mol)"}, "answer": "D"}, {"id": 148, "topic": "Hydrogen Bonding & IMFs", "stem": "Two substances have similar molar masses. Substance A is nonpolar and substance B is polar with an O—H bond. Which has the higher boiling point?", "choices": {"A": "Substance A — larger molecules always boil higher", "B": "Substance B — hydrogen bonding provides stronger IMFs", "C": "They should have the same boiling point", "D": "Cannot be determined from this information"}, "answer": "B"}, {"id": 149, "topic": "Hydrogen Bonding & IMFs", "stem": "When comparing substances of similar size and polarity, what is the MOST important factor in determining which has the higher boiling point?", "choices": {"A": "color", "B": "the number of atoms in the formula", "C": "the presence or absence of hydrogen bonding", "D": "whether the substance is a solid or liquid"}, "answer": "C"}, {"id": 150, "topic": "Hydrogen Bonding & IMFs", "stem": "A substance has only London dispersion forces. It has a very high boiling point. What is the most likely explanation?", "choices": {"A": "It actually has hydrogen bonding", "B": "The substance is ionic", "C": "London dispersion forces are always the strongest", "D": "It is a very large molecule with many electrons"}, "answer": "D"}];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandomQuestions(bank, n) {
+  const k = Math.min(n, bank.length);
+  return shuffle(bank).slice(0, k);
+}
+
+function buildQuizQuestions() {
+  const picked = pickRandomQuestions(QUESTION_BANK, NUM_QUESTIONS);
+  return picked.map((q, idx) => {
+    const letters = ["A","B","C","D"];
+    const choicesArr = letters.map(L => ({ text: q.choices[L], isCorrect: L === q.answer }));
+    const shuffled = shuffle(choicesArr);
+    const newChoices = {};
+    let newCorrect = null;
+    shuffled.forEach((c, i) => {
+      const newL = letters[i];
+      newChoices[newL] = c.text;
+      if (c.isCorrect) newCorrect = newL;
+    });
+    return {
+      displayIndex: idx + 1,
+      bankId: q.id,
+      topic: q.topic,
+      stem: q.stem,
+      choices: newChoices,
+      correct: newCorrect,
+      selected: null,
+    };
+  });
+}
+
+let quiz = [];
+let timerInterval = null;
+let endTime = null;
+let submitted = false;
+let studentName = "";
+
+function renderQuestions() {
+  const c = document.getElementById("questionsContainer");
+  c.innerHTML = "";
+  quiz.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    card.id = "q-" + qi;
+    let html = '<div class="qhead">Question ' + q.displayIndex + ' of ' + NUM_QUESTIONS + '</div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      const id = "q" + qi + "_" + L;
+      html += '<label class="choice" data-q="' + qi + '" data-l="' + L + '">';
+      html += '<input type="radio" name="q' + qi + '" value="' + L + '" id="' + id + '"> ';
+      html += '<strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]);
+      html += '</label>';
+    });
+    card.innerHTML = html;
+    c.appendChild(card);
+  });
+  c.addEventListener("change", e => {
+    if (e.target && e.target.type === "radio") {
+      const qi = parseInt(e.target.name.slice(1), 10);
+      quiz[qi].selected = e.target.value;
+      const labels = document.querySelectorAll('label.choice[data-q="' + qi + '"]');
+      labels.forEach(lb => lb.classList.toggle("selected", lb.getAttribute("data-l") === e.target.value));
+    }
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function startTimer() {
+  endTime = Date.now() + TIME_LIMIT_SEC * 1000;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+}
+function updateTimer() {
+  const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById("timerTime").textContent =
+    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  const t = document.getElementById("timer");
+  t.classList.toggle("warning", remaining <= 300 && remaining > 60);
+  t.classList.toggle("critical", remaining <= 60);
+  if (remaining <= 0 && !submitted) {
+    clearInterval(timerInterval);
+    submitQuiz(true);
+  }
+}
+
+function submitQuiz(autoSubmitted) {
+  if (submitted) return;
+  const unanswered = quiz.filter(q => !q.selected).length;
+  if (!autoSubmitted && unanswered > 0) {
+    if (!confirm("You have " + unanswered + " unanswered question(s). Submit anyway?")) return;
+  }
+  submitted = true;
+  if (timerInterval) clearInterval(timerInterval);
+
+  let correct = 0;
+  quiz.forEach(q => { if (q.selected === q.correct) correct++; });
+  const total = quiz.length;
+  const pct = Math.round((correct / total) * 100);
+  const passed = pct >= PASS_PERCENT;
+
+  document.getElementById("screen-quiz").classList.add("hidden");
+  const rs = document.getElementById("screen-results");
+  rs.classList.remove("hidden");
+  document.getElementById("scoreDisplay").textContent = correct + "/" + total + "  (" + pct + "%)";
+  document.getElementById("scoreDisplay").className = "score " + (passed ? "pass" : "fail");
+  document.getElementById("passLabel").innerHTML = passed
+    ? '<strong style="color:var(--good);">PASS — meets 80% standard</strong>'
+    : '<strong style="color:var(--bad);">DID NOT PASS — complete remediation before retake</strong>';
+  document.getElementById("studentResultLabel").textContent =
+    studentName + (autoSubmitted ? " · auto-submitted (time expired)" : "");
+  const now = new Date();
+  const ts = now.toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+  document.getElementById("timestampLabel").textContent = "Completed: " + ts;
+
+  const rev = document.getElementById("reviewContainer");
+  rev.innerHTML = "<h2 style='margin-top:0;'>Question Review</h2>";
+  quiz.forEach((q) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    let html = '<div class="qhead">Q' + q.displayIndex + ' &middot; <span style="color:var(--muted);font-weight:400;">Topic: ' + escapeHtml(q.topic || "") + ' &middot; Bank #' + q.bankId + '</span></div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      let cls = "choice";
+      if (L === q.correct) cls += " correct";
+      if (L === q.selected && q.selected !== q.correct) cls += " incorrect";
+      let mark = "";
+      if (L === q.correct) mark = " ✓ correct";
+      if (L === q.selected && q.selected !== q.correct) mark = " ✗ your answer";
+      else if (L === q.selected && q.selected === q.correct) mark = " ✓ your answer";
+      html += '<div class="' + cls + '"><strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]) + '<em style="color:var(--muted);">' + mark + '</em></div>';
+    });
+    if (!q.selected) {
+      html += '<div style="color:var(--bad); font-size:13px; margin-top:6px;"><em>Not answered</em></div>';
+    }
+    card.innerHTML = html;
+    rev.appendChild(card);
+  });
+
+  window.scrollTo(0, 0);
+}
+
+document.getElementById("btnStart").addEventListener("click", () => {
+  const nm = document.getElementById("studentName").value.trim();
+  if (!nm) { alert("Please enter your full name."); return; }
+  studentName = nm;
+  document.getElementById("studentLabel").textContent = nm;
+  quiz = buildQuizQuestions();
+  document.getElementById("screen-start").classList.add("hidden");
+  document.getElementById("screen-quiz").classList.remove("hidden");
+  renderQuestions();
+  startTimer();
+  window.addEventListener("beforeunload", e => {
+    if (!submitted) { e.preventDefault(); e.returnValue = ""; }
+  });
+});
+document.getElementById("btnSubmit").addEventListener("click", () => submitQuiz(false));
+</script>
+</body>
+</html>
