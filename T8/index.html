@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CHEM 3A — Tier 8 Skill Check</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --accent: #2a5d8f;
+    --good: #1f7a3a;
+    --bad: #b22d2d;
+    --warn: #c46c00;
+    --border: #d9d9d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 24px 20px 80px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+  input[type="text"] {
+    width: 100%; font-size: 16px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff;
+  }
+  button {
+    background: var(--accent); color: white; border: none;
+    padding: 12px 20px; border-radius: 6px; font-size: 15px;
+    font-weight: 600; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { background: #999; cursor: not-allowed; }
+  button.success { background: var(--good); }
+  .timer {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600;
+  }
+  .timer.warning { background: #fff4e0; border-color: var(--warn); color: var(--warn); }
+  .timer.critical { background: #ffe5e5; border-color: var(--bad); color: var(--bad); }
+  .timer-time { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .qcard { margin-bottom: 14px; }
+  .qhead { font-weight: 700; margin-bottom: 8px; font-size: 15px; color: var(--accent); }
+  .qstem { white-space: pre-wrap; margin-bottom: 12px; font-size: 16px; }
+  .choice {
+    display: block; padding: 10px 12px; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; background: #fafaf7;
+    transition: background 0.1s;
+  }
+  .choice:hover { background: #eef2f7; }
+  .choice input { margin-right: 10px; }
+  .choice.selected { background: #dde9f5; border-color: var(--accent); }
+  .choice.correct { background: #def5e1; border-color: var(--good); }
+  .choice.incorrect { background: #f8d7d7; border-color: var(--bad); }
+  .results-summary {
+    background: #fff; border: 2px solid var(--accent);
+    border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .score { font-size: 42px; font-weight: 700; margin: 8px 0; }
+  .pass { color: var(--good); }
+  .fail { color: var(--bad); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .footer-note {
+    background: #fffce5; border-left: 4px solid var(--warn);
+    padding: 10px 14px; margin-top: 14px; font-size: 14px; border-radius: 4px;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="screen-start">
+    <h1>CHEM 3A — Tier 8 Skill Check</h1>
+    <div class="sub">Acids, Bases, & Equilibrium · 15 questions · 30 minutes · 80% to pass</div>
+
+    <div class="card">
+      <p><strong>Instructions:</strong></p>
+      <ul>
+        <li>Closed-note assessment.</li>
+        <li>You have <strong>30 minutes</strong>. Timer auto-submits at zero.</li>
+        <li>Pick the best answer. You can change answers until you submit.</li>
+        <li>When done, click <strong>Submit</strong>, then take a screenshot of your score.</li>
+      </ul>
+      <label for="studentName">Your full name (required):</label>
+      <input id="studentName" type="text" placeholder="Last, First" autocomplete="name">
+      <div style="margin-top:14px;">
+        <button id="btnStart">Start Skill Check</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-quiz" class="hidden">
+    <div class="timer" id="timer">
+      <div>Skill Check in progress — <span id="studentLabel"></span></div>
+      <div class="timer-time" id="timerTime">30:00</div>
+    </div>
+    <div id="questionsContainer"></div>
+    <div class="actions">
+      <button id="btnSubmit" class="success">Submit Quiz</button>
+    </div>
+  </div>
+
+  <div id="screen-results" class="hidden">
+    <div class="results-summary">
+      <div style="font-size:14px; color:var(--muted); letter-spacing:0.5px;">CHEM 3A · TIER 8 SKILL CHECK</div>
+      <div class="score" id="scoreDisplay">--/15</div>
+      <div id="passLabel"></div>
+      <div id="studentResultLabel" style="margin-top:10px; font-size:18px; font-weight:600;"></div>
+      <div id="timestampLabel" style="margin-top:4px; color: var(--muted); font-size:13px;"></div>
+    </div>
+    <div class="footer-note" style="text-align:center;">
+      <strong>📸 Take a screenshot of this page</strong> and show it to Prof. Gilley before you leave.
+    </div>
+    <div id="reviewContainer" style="margin-top:24px;"></div>
+  </div>
+
+</div>
+
+<script>
+const QUIZ_TITLE = "CHEM 3A — Tier 8 Skill Check";
+const NUM_QUESTIONS = 15;
+const TIME_LIMIT_SEC = 30 * 60;
+const PASS_PERCENT = 80;
+
+const QUESTION_BANK = [{"id": 1, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "According to the Arrhenius definition, which of the following is characteristic of a base?", "choices": {"A": "It produces H⁺ ions in water", "B": "It produces OH⁻ ions in aqueous solution", "C": "It accepts protons from other species", "D": "It donates electrons to other species"}, "answer": "B"}, {"id": 2, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which of the following is a strong acid that completely ionizes in water?", "choices": {"A": "Acetic acid (CH₃COOH)", "B": "Hydrofluoric acid (HF)", "C": "Nitric acid (HNO₃)", "D": "Carbonic acid (H₂CO₃)"}, "answer": "C"}, {"id": 3, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "What is the product of the neutralization reaction between HCl and NaOH?", "choices": {"A": "NaCl and H₂O", "B": "NaCl only", "C": "NaCl and Cl₂", "D": "Na and HCl"}, "answer": "A"}, {"id": 4, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which of the following is classified as a weak acid?", "choices": {"A": "CH₃COOH", "B": "H₂SO₄", "C": "HClO₄", "D": "HBr"}, "answer": "A"}, {"id": 5, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "According to the Brønsted-Lowry definition, what is an acid?", "choices": {"A": "A proton donor", "B": "A species that produces H⁺ in water", "C": "A species that produces OH⁻ in water", "D": "An electron acceptor"}, "answer": "A"}, {"id": 6, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which of the following is a strong base?", "choices": {"A": "NH₃", "B": "Ba(OH)₂", "C": "Al(OH)₃", "D": "H₂O"}, "answer": "B"}, {"id": 7, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Complete the neutralization reaction: H₂SO₄ + 2KOH →", "choices": {"A": "K₂SO₄ + O₂ + H₂", "B": "KSO₄ + H₂O", "C": "K₂SO₄ + H₂O", "D": "K + SO₄²⁻ + H₂O"}, "answer": "C"}, {"id": 8, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which of the following is NOT a strong acid?", "choices": {"A": "HF", "B": "HI", "C": "HBr", "D": "HClO₄"}, "answer": "A"}, {"id": 9, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "What is the product of the neutralization reaction between HNO₃ and Ca(OH)₂?", "choices": {"A": "CaN₂O₆ and H₂O", "B": "CaNO₃ and H₂O", "C": "Ca and NO₃⁻ and H₂O", "D": "Ca(NO₃)₂ and H₂O"}, "answer": "D"}, {"id": 10, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which statement correctly describes a salt?", "choices": {"A": "It is a strong acid that partially ionizes in water", "B": "It is a weak base that does not dissolve in water", "C": "It is a covalent compound that does not conduct electricity", "D": "It is the ionic product formed from an acid-base reaction"}, "answer": "D"}, {"id": 11, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "How many strong bases are in this list: NaOH, NH₃, KOH, LiOH, Ca(OH)₂?", "choices": {"A": "2", "B": "3", "C": "4", "D": "5"}, "answer": "C"}, {"id": 12, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which of the following reactions is an acid-base reaction?", "choices": {"A": "2Na + Cl₂ → 2NaCl", "B": "AgNO₃ + NaCl → AgCl + NaNO₃", "C": "Fe + CuSO₄ → FeSO₄ + Cu", "D": "HCl + NaOH → NaCl + H₂O"}, "answer": "D"}, {"id": 13, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "A weak base is best characterized as a species that", "choices": {"A": "Only partially accepts protons in water", "B": "Completely ionizes in water to produce OH⁻", "C": "Does not dissolve in water", "D": "Donates electrons to water"}, "answer": "A"}, {"id": 14, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which of the following is a strong acid?", "choices": {"A": "HF", "B": "HBr", "C": "H₃PO₄", "D": "CH₃COOH"}, "answer": "B"}, {"id": 15, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Complete the neutralization reaction: 2HCl + Ca(OH)₂ →", "choices": {"A": "CaCl + H₂O", "B": "Ca₂Cl + H₂O", "C": "CaCl₂ + O₂ + H₂", "D": "CaCl₂ + H₂O"}, "answer": "D"}, {"id": 16, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "According to the Brønsted-Lowry definition, which species is a base in this reaction: NH₃ + H₂O ⇌ NH₄⁺ + OH⁻?", "choices": {"A": "NH₃ (accepts a proton)", "B": "H₂O (accepts a proton)", "C": "NH₄⁺ (accepts a proton)", "D": "OH⁻ (donates a proton)"}, "answer": "A"}, {"id": 17, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which of the following is classified as a strong base?", "choices": {"A": "Cu(OH)₂", "B": "Al(OH)₃", "C": "Mg(OH)₂", "D": "NaOH"}, "answer": "D"}, {"id": 18, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "In the neutralization reaction HNO₃ + NaOH → NaNO₃ + H₂O, what is the acid?", "choices": {"A": "NaOH", "B": "HNO₃", "C": "NaNO₃", "D": "H₂O"}, "answer": "B"}, {"id": 19, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which of the following best explains why HCl is a strong acid?", "choices": {"A": "It completely ionizes in water to release H⁺", "B": "It has a low molar mass and dissolves readily in water", "C": "It has a high boiling point", "D": "It has a small molecular size"}, "answer": "A"}, {"id": 20, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Complete the neutralization reaction: 3HBr + Al(OH)₃ →", "choices": {"A": "AlBr + 3H₂O", "B": "Al₃Br + H₂O", "C": "AlBr₃ + H₂O", "D": "AlBr₃ + O₂ + H₂"}, "answer": "C"}, {"id": 21, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "How many strong acids are in this list: HCl, HF, HNO₃, H₂SO₄, CH₃COOH, HBr?", "choices": {"A": "2", "B": "4", "C": "5", "D": "6"}, "answer": "B"}, {"id": 22, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which of the following is a characteristic of a weak acid?", "choices": {"A": "It completely ionizes in water", "B": "It is insoluble in water", "C": "It produces very few H⁺ ions in water", "D": "It does not conduct electricity"}, "answer": "C"}, {"id": 23, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "In the reaction HCl + KOH → KCl + H₂O, which substance is the base?", "choices": {"A": "HCl", "B": "KOH", "C": "KCl", "D": "H₂O"}, "answer": "B"}, {"id": 24, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "Which classification best describes the compound Sr(OH)₂?", "choices": {"A": "Weak acid", "B": "Weak base", "C": "Strong base", "D": "Salt"}, "answer": "C"}, {"id": 25, "topic": "Acid-Base Definitions, Classification, & Neutralization", "stem": "A neutralization reaction always produces which two types of substances?", "choices": {"A": "An acid and a base", "B": "A base and oxygen", "C": "A salt and oxygen", "D": "A salt and water"}, "answer": "D"}, {"id": 26, "topic": "Conjugate Acid-Base Pairs", "stem": "In the reaction HCl + H₂O ⇌ H₃O⁺ + Cl⁻, what is the conjugate base of HCl?", "choices": {"A": "H₂O", "B": "Cl⁻", "C": "H₃O⁺", "D": "HCl"}, "answer": "B"}, {"id": 27, "topic": "Conjugate Acid-Base Pairs", "stem": "What is the conjugate acid of the ammonia ion, NH₃?", "choices": {"A": "NH₂⁻", "B": "NH₂OH", "C": "N₂H₅⁺", "D": "NH₄⁺"}, "answer": "D"}, {"id": 28, "topic": "Conjugate Acid-Base Pairs", "stem": "In the reaction CH₃COOH + H₂O ⇌ H₃O⁺ + CH₃COO⁻, identify the conjugate acid-base pair.", "choices": {"A": "H₂O and H₃O⁺", "B": "CH₃COOH and CH₃COO⁻", "C": "CH₃COOH and H₂O", "D": "H₃O⁺ and CH₃COO⁻"}, "answer": "B"}, {"id": 29, "topic": "Conjugate Acid-Base Pairs", "stem": "What is the conjugate base of HNO₃?", "choices": {"A": "HNO₂", "B": "NO₃⁻", "C": "NO₂⁻", "D": "H₂NO₃"}, "answer": "B"}, {"id": 30, "topic": "Conjugate Acid-Base Pairs", "stem": "Which of the following pairs represents a conjugate acid-base pair?", "choices": {"A": "H₂SO₄ and HSO₄⁻", "B": "HCl and NaCl", "C": "NH₃ and NH₂⁻", "D": "OH⁻ and O²⁻"}, "answer": "A"}, {"id": 31, "topic": "Conjugate Acid-Base Pairs", "stem": "In the reaction H₂CO₃ ⇌ H⁺ + HCO₃⁻, what is the conjugate acid of HCO₃⁻?", "choices": {"A": "H₃O⁺", "B": "CO₃²⁻", "C": "H₂O", "D": "H₂CO₃"}, "answer": "D"}, {"id": 32, "topic": "Conjugate Acid-Base Pairs", "stem": "What is the conjugate base of H₂PO₄⁻?", "choices": {"A": "HPO₄²⁻", "B": "H₃PO₄", "C": "P₂O₅", "D": "PO₄³⁻"}, "answer": "A"}, {"id": 33, "topic": "Conjugate Acid-Base Pairs", "stem": "Identify the conjugate acid of the bicarbonate ion, HCO₃⁻.", "choices": {"A": "H₂CO₃", "B": "CO₃²⁻", "C": "H₃O⁺", "D": "CO₂"}, "answer": "A"}, {"id": 34, "topic": "Conjugate Acid-Base Pairs", "stem": "In the reaction NH₄⁺ + H₂O ⇌ NH₃ + H₃O⁺, what is the conjugate base of NH₄⁺?", "choices": {"A": "H₂O", "B": "OH⁻", "C": "H₃O⁺", "D": "NH₃"}, "answer": "D"}, {"id": 35, "topic": "Conjugate Acid-Base Pairs", "stem": "Which statement correctly describes an amphiprotic species?", "choices": {"A": "It can only donate protons", "B": "It can only accept protons", "C": "It can act as both an acid and a base", "D": "It is a salt that does not ionize"}, "answer": "C"}, {"id": 36, "topic": "Conjugate Acid-Base Pairs", "stem": "Which of the following is an amphiprotic species?", "choices": {"A": "HSO₄⁻", "B": "NaOH", "C": "HCl", "D": "NO₃⁻"}, "answer": "A"}, {"id": 37, "topic": "Conjugate Acid-Base Pairs", "stem": "What is the conjugate acid of OH⁻?", "choices": {"A": "O²⁻", "B": "H₃O⁺", "C": "H₂O", "D": "OOH"}, "answer": "C"}, {"id": 38, "topic": "Conjugate Acid-Base Pairs", "stem": "In the reaction HF + H₂O ⇌ H₃O⁺ + F⁻, which species is the conjugate base of HF?", "choices": {"A": "F⁻", "B": "HF", "C": "H₃O⁺", "D": "H₂O"}, "answer": "A"}, {"id": 39, "topic": "Conjugate Acid-Base Pairs", "stem": "Identify the conjugate base of HPO₄²⁻.", "choices": {"A": "H₂PO₄⁻", "B": "H₃PO₄", "C": "PO₄³⁻", "D": "HPO₃⁻"}, "answer": "C"}, {"id": 40, "topic": "Conjugate Acid-Base Pairs", "stem": "Which of the following is both an acid and a base (amphiprotic)?", "choices": {"A": "NH₃", "B": "OH⁻", "C": "H₂O", "D": "H⁺"}, "answer": "C"}, {"id": 41, "topic": "Conjugate Acid-Base Pairs", "stem": "In the reaction HCN + H₂O ⇌ H₃O⁺ + CN⁻, what is the conjugate acid of CN⁻?", "choices": {"A": "C₂N₂", "B": "HCN + H⁺", "C": "H₃O⁺", "D": "HCN"}, "answer": "D"}, {"id": 42, "topic": "Conjugate Acid-Base Pairs", "stem": "What is the conjugate base of H₂SO₄?", "choices": {"A": "SO₄²⁻", "B": "HSO₄⁻", "C": "H₂SO₃", "D": "SO₃²⁻"}, "answer": "B"}, {"id": 43, "topic": "Conjugate Acid-Base Pairs", "stem": "In the reaction HCO₃⁻ + NH₃ ⇌ CO₃²⁻ + NH₄⁺, which pair represents a conjugate acid-base pair?", "choices": {"A": "HCO₃⁻ and NH₃", "B": "NH₃ and NH₄⁺", "C": "HCO₃⁻ and NH₄⁺", "D": "HCO₃⁻ and CO₃²⁻"}, "answer": "D"}, {"id": 44, "topic": "Conjugate Acid-Base Pairs", "stem": "Which of the following species can act as both a Brønsted-Lowry acid and base?", "choices": {"A": "HNO₃", "B": "H₂CO₃", "C": "HCl", "D": "NaCl"}, "answer": "B"}, {"id": 45, "topic": "Conjugate Acid-Base Pairs", "stem": "What is the conjugate base of H₃O⁺?", "choices": {"A": "H₂O", "B": "OH⁻", "C": "O²⁻", "D": "H₄O²⁺"}, "answer": "A"}, {"id": 46, "topic": "Conjugate Acid-Base Pairs", "stem": "In the reaction HSO₄⁻ ⇌ H⁺ + SO₄²⁻, what is the conjugate base of HSO₄⁻?", "choices": {"A": "SO₄²⁻", "B": "H₂SO₄", "C": "SO₃²⁻", "D": "HSO₃⁻"}, "answer": "A"}, {"id": 47, "topic": "Conjugate Acid-Base Pairs", "stem": "Identify the conjugate acid of the phosphate ion, PO₄³⁻.", "choices": {"A": "H₂PO₄⁻", "B": "P₂O₈⁶⁻", "C": "HPO₄²⁻", "D": "H₃PO₄"}, "answer": "C"}, {"id": 48, "topic": "Conjugate Acid-Base Pairs", "stem": "Which of the following is the conjugate acid-base pair in the reaction: HCl + H₂O ⇌ H₃O⁺ + Cl⁻?", "choices": {"A": "HCl and H₂O", "B": "H₂O and H₃O⁺", "C": "HCl and Cl⁻", "D": "H₃O⁺ and Cl⁻"}, "answer": "C"}, {"id": 49, "topic": "Conjugate Acid-Base Pairs", "stem": "An amphiprotic species such as HSO₄⁻ can function as", "choices": {"A": "Only an acid", "B": "Both an acid and a base", "C": "Only a base", "D": "Neither an acid nor a base"}, "answer": "B"}, {"id": 50, "topic": "Conjugate Acid-Base Pairs", "stem": "What is the conjugate base of HF?", "choices": {"A": "H₂F⁺", "B": "F₂", "C": "HF₂⁻", "D": "F⁻"}, "answer": "D"}, {"id": 51, "topic": "pH, pOH, & Ion Concentrations", "stem": "If [H⁺] = 1.0 × 10⁻⁴ M, what is the pH?", "choices": {"A": "4", "B": "2", "C": "10", "D": "14"}, "answer": "A"}, {"id": 52, "topic": "pH, pOH, & Ion Concentrations", "stem": "If pH = 3, what is [H⁺]?", "choices": {"A": "10⁻³ ppm", "B": "1.0 × 10⁻⁴ M", "C": "3.0 M", "D": "1.0 × 10⁻³ M"}, "answer": "D"}, {"id": 53, "topic": "pH, pOH, & Ion Concentrations", "stem": "If [OH⁻] = 1.0 × 10⁻⁵ M, what is the pOH?", "choices": {"A": "14", "B": "9", "C": "10", "D": "5"}, "answer": "D"}, {"id": 54, "topic": "pH, pOH, & Ion Concentrations", "stem": "At 25°C, what is the relationship between pH and pOH?", "choices": {"A": "pH + pOH = 14", "B": "pH + pOH = 10", "C": "pH + pOH = 7", "D": "pH × pOH = 14"}, "answer": "A"}, {"id": 55, "topic": "pH, pOH, & Ion Concentrations", "stem": "If pH = 6, what is pOH?", "choices": {"A": "6", "B": "8", "C": "14", "D": "20"}, "answer": "B"}, {"id": 56, "topic": "pH, pOH, & Ion Concentrations", "stem": "If [H⁺] = 1.0 × 10⁻⁷ M, what is pH?", "choices": {"A": "10", "B": "7", "C": "14", "D": "0"}, "answer": "B"}, {"id": 57, "topic": "pH, pOH, & Ion Concentrations", "stem": "Which solution is most acidic?", "choices": {"A": "pH = 4", "B": "pH = 2", "C": "pH = 10", "D": "pH = 7"}, "answer": "B"}, {"id": 58, "topic": "pH, pOH, & Ion Concentrations", "stem": "If pOH = 3, what is pH?", "choices": {"A": "3", "B": "14", "C": "11", "D": "17"}, "answer": "C"}, {"id": 59, "topic": "pH, pOH, & Ion Concentrations", "stem": "If [OH⁻] = 1.0 × 10⁻² M, what is the pOH?", "choices": {"A": "1", "B": "12", "C": "2", "D": "14"}, "answer": "C"}, {"id": 60, "topic": "pH, pOH, & Ion Concentrations", "stem": "Calculate [H⁺] if pH = 5.", "choices": {"A": "5.0 × 10⁻⁵ M", "B": "5.0 M", "C": "1.0 × 10⁻⁹ M", "D": "1.0 × 10⁻⁵ M"}, "answer": "D"}, {"id": 61, "topic": "pH, pOH, & Ion Concentrations", "stem": "If [OH⁻] = 1.0 × 10⁻¹² M, what is the pH?", "choices": {"A": "12", "B": "2", "C": "14", "D": "26"}, "answer": "B"}, {"id": 62, "topic": "pH, pOH, & Ion Concentrations", "stem": "A solution with [H⁺] = 1.0 × 10⁻⁹ M is", "choices": {"A": "Acidic", "B": "Basic", "C": "Neutral", "D": "Saturated"}, "answer": "B"}, {"id": 63, "topic": "pH, pOH, & Ion Concentrations", "stem": "If pH = 9, what is [OH⁻]?", "choices": {"A": "9.0 M", "B": "1.0 × 10⁻⁹ M", "C": "1.0 × 10⁻⁴ M", "D": "1.0 × 10⁻⁵ M"}, "answer": "D"}, {"id": 64, "topic": "pH, pOH, & Ion Concentrations", "stem": "Calculate pOH if [H⁺] = 1.0 × 10⁻¹¹ M.", "choices": {"A": "11", "B": "3", "C": "25", "D": "14"}, "answer": "A"}, {"id": 65, "topic": "pH, pOH, & Ion Concentrations", "stem": "If [H⁺] = 1.0 × 10⁻² M, is the solution acidic or basic?", "choices": {"A": "Neutral", "B": "Basic", "C": "Acidic", "D": "Unsaturated"}, "answer": "C"}, {"id": 66, "topic": "pH, pOH, & Ion Concentrations", "stem": "A solution has pH = 8. What is the pOH?", "choices": {"A": "14", "B": "8", "C": "6", "D": "22"}, "answer": "C"}, {"id": 67, "topic": "pH, pOH, & Ion Concentrations", "stem": "If [H⁺][OH⁻] = 1.0 × 10⁻¹⁴, and [H⁺] = 1.0 × 10⁻⁶ M, what is [OH⁻]?", "choices": {"A": "1.0 × 10⁻⁸ M", "B": "1.0 × 10⁻⁶ M", "C": "1.0 × 10⁻¹⁴ M", "D": "6.0 × 10⁻⁹ M"}, "answer": "A"}, {"id": 68, "topic": "pH, pOH, & Ion Concentrations", "stem": "Calculate pH if [H⁺] = 1.0 × 10⁻¹⁰ M.", "choices": {"A": "10", "B": "4", "C": "14", "D": "24"}, "answer": "A"}, {"id": 69, "topic": "pH, pOH, & Ion Concentrations", "stem": "Which of the following solutions is the most basic?", "choices": {"A": "[H⁺] = 1.0 × 10⁻¹² M", "B": "[H⁺] = 1.0 × 10⁻⁴ M", "C": "[H⁺] = 1.0 × 10⁻² M", "D": "[H⁺] = 1.0 × 10⁻¹⁰ M"}, "answer": "A"}, {"id": 70, "topic": "pH, pOH, & Ion Concentrations", "stem": "If pH = 11, what is [H⁺]?", "choices": {"A": "1.0 × 10⁻³ M", "B": "1.0 × 10⁻¹¹ M", "C": "11 M", "D": "1.1 × 10⁻¹ M"}, "answer": "B"}, {"id": 71, "topic": "pH, pOH, & Ion Concentrations", "stem": "A solution has [H⁺] = 1.0 × 10⁻⁶ M. What is the pH?", "choices": {"A": "18", "B": "8", "C": "12", "D": "6"}, "answer": "D"}, {"id": 72, "topic": "pH, pOH, & Ion Concentrations", "stem": "If pOH = 13, what is pH?", "choices": {"A": "27", "B": "13", "C": "1", "D": "14"}, "answer": "C"}, {"id": 73, "topic": "pH, pOH, & Ion Concentrations", "stem": "Calculate [OH⁻] if [H⁺] = 1.0 × 10⁻³ M.", "choices": {"A": "1.0 × 10⁻³ M", "B": "1.0 × 10⁻¹² M", "C": "1.0 × 10⁻¹¹ M", "D": "3.0 × 10⁻¹⁴ M"}, "answer": "C"}, {"id": 74, "topic": "pH, pOH, & Ion Concentrations", "stem": "A solution with pH = 7 is considered", "choices": {"A": "Strongly acidic", "B": "Acidic", "C": "Neutral", "D": "Basic"}, "answer": "C"}, {"id": 75, "topic": "pH, pOH, & Ion Concentrations", "stem": "If [OH⁻] = 1.0 × 10⁻⁸ M, what is the pH?", "choices": {"A": "4", "B": "10", "C": "8", "D": "6"}, "answer": "D"}, {"id": 76, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "The normal pH range of human blood is approximately", "choices": {"A": "6.8–7.0", "B": "8.0–8.5", "C": "7.50–7.80", "D": "7.35–7.45"}, "answer": "D"}, {"id": 77, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "When blood pH drops below 7.35, the condition is called", "choices": {"A": "Alkalosis", "B": "Metabolic balance", "C": "Hyperventilation", "D": "Acidosis"}, "answer": "D"}, {"id": 78, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "When blood pH rises above 7.45, the condition is called", "choices": {"A": "Alkalosis", "B": "Acidosis", "C": "Respiratory depression", "D": "Metabolic failure"}, "answer": "A"}, {"id": 79, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Which of the following is the primary buffer system in blood?", "choices": {"A": "HCO₃⁻/H₂CO₃", "B": "HCl/Cl⁻", "C": "H₃PO₄/H₂PO₄⁻", "D": "NH₃/NH₄⁺"}, "answer": "A"}, {"id": 80, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "How does an antacid work to relieve stomach acid?", "choices": {"A": "It increases acid production", "B": "It neutralizes stomach acid", "C": "It prevents acid secretion only", "D": "It converts acid to water"}, "answer": "B"}, {"id": 81, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Classify the following reaction: HCl + NaOH → NaCl + H₂O", "choices": {"A": "Redox reaction", "B": "Acid-base reaction", "C": "Precipitation reaction", "D": "Decomposition reaction"}, "answer": "B"}, {"id": 82, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "A patient has a blood pH of 7.28. This represents", "choices": {"A": "Metabolic acidosis", "B": "Respiratory alkalosis", "C": "Normal blood pH", "D": "Respiratory acidosis"}, "answer": "A"}, {"id": 83, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Which of the following is NOT classified as an acid-base reaction?", "choices": {"A": "HBr + KOH → KBr + H₂O", "B": "Fe + Cu²⁺ → Fe²⁺ + Cu", "C": "H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O", "D": "HNO₃ + NH₃ → NH₄NO₃"}, "answer": "B"}, {"id": 84, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "A buffer is best described as a solution that", "choices": {"A": "Always maintains a pH of 7 regardless of acid or base added", "B": "Completely absorbs all added acids or bases", "C": "Resists pH change when small amounts of acid or base are added", "D": "Prevents any chemical reactions from occurring"}, "answer": "C"}, {"id": 85, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Which reaction type is represented by: Zn + Cu²⁺ → Zn²⁺ + Cu?", "choices": {"A": "Acid-base reaction", "B": "Precipitation reaction", "C": "Redox reaction", "D": "Decomposition reaction"}, "answer": "C"}, {"id": 86, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "A patient with blood pH = 7.50 is experiencing", "choices": {"A": "Metabolic alkalosis", "B": "Respiratory acidosis", "C": "Metabolic acidosis", "D": "Hypoventilation"}, "answer": "A"}, {"id": 87, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Classify this reaction: AgNO₃ + NaCl → AgCl + NaNO₃", "choices": {"A": "Acid-base reaction", "B": "Combustion reaction", "C": "Redox reaction", "D": "Precipitation reaction"}, "answer": "D"}, {"id": 88, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "The bicarbonate ion (HCO₃⁻) in blood helps maintain pH by", "choices": {"A": "Both accepting H⁺ and donating H⁺ as needed", "B": "Donating H⁺ when pH rises", "C": "Accepting H⁺ when pH drops", "D": "Neutralizing all bases that come into contact with it"}, "answer": "A"}, {"id": 89, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Which of the following is an example of a redox reaction?", "choices": {"A": "2Fe + 3Cl₂ → 2FeCl₃", "B": "HCl + NaOH → NaCl + H₂O", "C": "Ag⁺ + Cl⁻ → AgCl", "D": "H₂CO₃ ⇌ H₂O + CO₂"}, "answer": "A"}, {"id": 90, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "A typical antacid contains which of the following?", "choices": {"A": "Strong acid", "B": "Base or amphoteric compound", "C": "Weak acid that partially dissociates in water", "D": "Indicator dye"}, "answer": "B"}, {"id": 91, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Classify the reaction: H₂SO₄ + Ba(OH)₂ → BaSO₄ + H₂O. What type of reaction is this?", "choices": {"A": "Redox and precipitation", "B": "Decomposition", "C": "Combustion only", "D": "Acid-base"}, "answer": "D"}, {"id": 92, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "If a patient's blood becomes too acidic (pH < 7.35), breathing becomes more rapid. This is an attempt to", "choices": {"A": "Increase CO₂ retention", "B": "Increase H⁺ production", "C": "Decrease CO₂ levels", "D": "Decrease HCO₃⁻ levels"}, "answer": "C"}, {"id": 93, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Which of the following describes respiratory alkalosis?", "choices": {"A": "Low blood pH due to decreased breathing", "B": "High blood pH due to increased acid production", "C": "Low blood pH due to metabolic factors", "D": "High blood pH due to increased breathing"}, "answer": "D"}, {"id": 94, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "A compound that can both donate and accept a proton is called", "choices": {"A": "Amphoteric", "B": "Amphiprotic", "C": "Bifunctional", "D": "Equilibrium agent"}, "answer": "B"}, {"id": 95, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Classify the following reaction: N₂ + 3H₂ ⇌ 2NH₃", "choices": {"A": "Acid-base reaction", "B": "Redox reaction", "C": "Precipitation reaction", "D": "Decomposition reaction"}, "answer": "B"}, {"id": 96, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "In clinical settings, why is blood pH monitoring critical?", "choices": {"A": "pH has no effect on oxygen transport in the human bloodstream", "B": "pH only affects red blood cell color", "C": "pH is unrelated to acid-base balance", "D": "pH affects protein structure and enzyme function"}, "answer": "D"}, {"id": 97, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Which of the following best represents a precipitation reaction?", "choices": {"A": "HCl + NaOH → NaCl + H₂O", "B": "Cu + 2Ag⁺ → Cu²⁺ + 2Ag", "C": "Ca²⁺ + CO₃²⁻ → CaCO₃↓", "D": "CH₄ + 2O₂ → CO₂ + 2H₂O"}, "answer": "C"}, {"id": 98, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "A buffer system in the body prevents large pH changes by", "choices": {"A": "Using the reaction HCO₃⁻/H₂CO₃ to absorb excess H⁺ or OH⁻", "B": "Adding water to dilute acids and bases", "C": "Stopping all metabolic processes", "D": "Excreting acids only, while retaining bicarbonate ions"}, "answer": "A"}, {"id": 99, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Which reaction is classified as both an acid-base and a precipitation reaction?", "choices": {"A": "HCl + NaOH → NaCl + H₂O", "B": "Fe + CuSO₄ → FeSO₄ + Cu", "C": "H₂SO₄ + Ba(OH)₂ → BaSO₄↓ + H₂O", "D": "AgNO₃ + NaCl → AgCl↓ + NaNO₃"}, "answer": "C"}, {"id": 100, "topic": "Blood pH, Clinical Applications, & Reaction Classification", "stem": "Metabolic alkalosis occurs when", "choices": {"A": "Blood pH is below 7.35 due to respiratory causes", "B": "CO₂ levels are too high", "C": "Blood pH is above 7.45 due to loss of acid or gain of base", "D": "Breathing rate is too fast"}, "answer": "C"}, {"id": 101, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "According to collision theory, for an effective collision to occur, which of the following must be true?", "choices": {"A": "All of the above are required", "B": "Molecules must have sufficient kinetic energy", "C": "Activation energy must be met or exceeded", "D": "Molecules must have proper orientation"}, "answer": "A"}, {"id": 102, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "Which of the following increases the rate of a chemical reaction?", "choices": {"A": "Lowering the temperature", "B": "Increasing the temperature", "C": "Decreasing the concentration of reactants", "D": "Removing the catalyst"}, "answer": "B"}, {"id": 103, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the reaction: aA + bB ⇌ cC + dD, what is the correct equilibrium expression?", "choices": {"A": "K = [A][B]/[C][D]", "B": "K = [A]^a[B]^b/[C]^c[D]^d", "C": "K = [C]^c[D]^d/[A]^a[B]^b", "D": "K = a[A] + b[B]/c[C] + d[D]"}, "answer": "C"}, {"id": 104, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "What does a catalyst do in a reaction?", "choices": {"A": "Increases the products formed", "B": "Decreases the products formed", "C": "Changes the equilibrium position", "D": "Lowers the activation energy"}, "answer": "D"}, {"id": 105, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the reaction N₂ + 3H₂ ⇌ 2NH₃, what is the equilibrium expression?", "choices": {"A": "K = [NH₃]²/[N₂][H₂]³", "B": "K = [N₂][H₂]³/[NH₃]²", "C": "K = [N₂]/[H₂]³[NH₃]²", "D": "K = [NH₃]/[N₂][H₂]"}, "answer": "A"}, {"id": 106, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "Which factor affects reaction rate but NOT equilibrium position?", "choices": {"A": "Temperature", "B": "Pressure", "C": "Catalyst", "D": "Concentration"}, "answer": "C"}, {"id": 107, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the reaction 2CO₂ ⇌ 2CO + O₂, what is K?", "choices": {"A": "K = [CO]/[CO₂]", "B": "K = [CO₂]²/[CO][O₂]", "C": "K = [CO]²/[O₂][CO₂]²", "D": "K = [CO]²[O₂]/[CO₂]²"}, "answer": "D"}, {"id": 108, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "Activation energy (Ea) is best defined as", "choices": {"A": "The energy released in a reaction", "B": "The minimum energy required for molecules to react", "C": "The total energy of all reactants", "D": "The energy required to break all bonds in reactants"}, "answer": "B"}, {"id": 109, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "If K >> 1 for a reaction, this indicates", "choices": {"A": "Reactants are favored at equilibrium", "B": "Products are favored at equilibrium", "C": "The reaction is very slow", "D": "A catalyst is needed"}, "answer": "B"}, {"id": 110, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the reaction H₂ + I₂ ⇌ 2HI, solids and pure liquids are", "choices": {"A": "NOT included in the equilibrium expression", "B": "Included in the equilibrium expression with their stoichiometric coefficients", "C": "Included in the equilibrium expression with coefficient 1", "D": "Always equal to 1 in K"}, "answer": "A"}, {"id": 111, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "Increasing the surface area of a solid reactant", "choices": {"A": "Decreases the reaction rate", "B": "Increases the reaction rate", "C": "Has no effect on reaction rate", "D": "Changes the equilibrium position"}, "answer": "B"}, {"id": 112, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the reaction aA ⇌ bB, if K = 0.01, which is true?", "choices": {"A": "Products are favored", "B": "The reaction is in equilibrium", "C": "Reactants are favored", "D": "Equal amounts of reactants and products exist"}, "answer": "C"}, {"id": 113, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "A catalyst is used in industry because it", "choices": {"A": "Increases the amount of product formed", "B": "Decreases the amount of product formed", "C": "Shifts equilibrium toward products", "D": "Speeds up the reaction without being consumed"}, "answer": "D"}, {"id": 114, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the reaction 2NO₂ ⇌ N₂O₄, write the equilibrium expression.", "choices": {"A": "K = [N₂O₄]/[NO₂]", "B": "K = [N₂O₄]/[NO₂]²", "C": "K = [NO₂]²/[N₂O₄]", "D": "K = [NO₂]/[N₂O₄]²"}, "answer": "C"}, {"id": 115, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "Which statement is true about a reaction with K = 1?", "choices": {"A": "Significant amounts of both reactants and products are present", "B": "Only products are present at the equilibrium endpoint", "C": "Only reactants are present", "D": "The reaction does not proceed"}, "answer": "A"}, {"id": 116, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "In the reaction CaCO₃(s) ⇌ CaO(s) + CO₂(g), the equilibrium expression is", "choices": {"A": "K = [CO₂]", "B": "K = [CaO][CO₂]/[CaCO₃]", "C": "K = [CaO][CO₂]", "D": "K = [CaCO₃]/[CaO][CO₂]"}, "answer": "A"}, {"id": 117, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "Temperature changes affect reaction rate by", "choices": {"A": "Decreasing the kinetic energy of molecules", "B": "Decreasing molecular motion", "C": "Changing the mass of reactants", "D": "Increasing the number of effective collisions"}, "answer": "D"}, {"id": 118, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the equilibrium H₂(g) + Br₂(g) ⇌ 2HBr(g), if K = 50, this means", "choices": {"A": "Reactants are favored", "B": "A catalyst was used", "C": "Products are strongly favored", "D": "The reaction is very slow"}, "answer": "C"}, {"id": 119, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "Which of the following does NOT affect the rate of a reaction?", "choices": {"A": "Temperature", "B": "Concentration of reactants", "C": "Color of reactants", "D": "Surface area of a solid"}, "answer": "C"}, {"id": 120, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the reaction 2N₂O₅ ⇌ 4NO₂ + O₂, write K.", "choices": {"A": "K = [N₂O₅]²/[NO₂]⁴[O₂]", "B": "K = [NO₂]⁴[O₂]/[N₂O₅]²", "C": "K = [NO₂][O₂]/[N₂O₅]", "D": "K = [N₂O₅]/[NO₂]⁴[O₂]"}, "answer": "B"}, {"id": 121, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "A reaction with K = 0.001 indicates", "choices": {"A": "Products are favored", "B": "The reaction is very fast", "C": "A catalyst must be used", "D": "Reactants are strongly favored"}, "answer": "D"}, {"id": 122, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "Concentration changes affect both", "choices": {"A": "Only equilibrium position", "B": "Only reaction rate", "C": "Reaction rate and equilibrium position", "D": "Neither rate nor equilibrium"}, "answer": "C"}, {"id": 123, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the reaction N₂(g) + 3H₂(g) ⇌ 2NH₃(g), the equilibrium expression is", "choices": {"A": "K = [NH₃]²/[N₂][H₂]³", "B": "K = [N₂][H₂]³/[NH₃]²", "C": "K = [NH₃]/[N₂ + H₂]", "D": "K = [N₂][H₂]/[NH₃]"}, "answer": "A"}, {"id": 124, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "Which substance is consumed in a catalytic reaction?", "choices": {"A": "Reactants", "B": "None—catalyst is regenerated", "C": "Catalyst (regenerated after each cycle)", "D": "Products"}, "answer": "B"}, {"id": 125, "topic": "Reaction Rates & Equilibrium Expressions", "stem": "For the reaction in a closed container, increasing the concentration of a reactant will", "choices": {"A": "Shift equilibrium toward reactants and decrease the forward rate of reaction", "B": "Decrease the rate", "C": "Have no effect on either rate or position", "D": "Increase the rate and shift equilibrium toward products"}, "answer": "D"}, {"id": 126, "topic": "Le Chatelier's Principle", "stem": "For the reaction N₂(g) + 3H₂(g) ⇌ 2NH₃(g), if N₂ is added, the equilibrium will", "choices": {"A": "Shift left (toward reactants)", "B": "Reverse completely", "C": "Not shift", "D": "Shift right (toward products)"}, "answer": "D"}, {"id": 127, "topic": "Le Chatelier's Principle", "stem": "For the reaction 2SO₂(g) + O₂(g) ⇌ 2SO₃(g), increasing the pressure will", "choices": {"A": "Shift equilibrium toward products", "B": "Shift equilibrium toward reactants", "C": "Have no effect on equilibrium", "D": "Slow down the reaction"}, "answer": "A"}, {"id": 128, "topic": "Le Chatelier's Principle", "stem": "For an exothermic reaction (ΔH < 0), increasing the temperature will", "choices": {"A": "Shift equilibrium toward products", "B": "Have no effect on equilibrium", "C": "Shift equilibrium toward reactants", "D": "Speed up the forward reaction only"}, "answer": "C"}, {"id": 129, "topic": "Le Chatelier's Principle", "stem": "A catalyst added to a reaction at equilibrium will", "choices": {"A": "Shift equilibrium toward products", "B": "Have no effect on the equilibrium position", "C": "Shift equilibrium toward reactants", "D": "Increase the amount of products at equilibrium"}, "answer": "B"}, {"id": 130, "topic": "Le Chatelier's Principle", "stem": "For the reaction N₂(g) + 3H₂(g) ⇌ 2NH₃(g), which has 4 moles of gas on the left and 2 moles on the right, increasing pressure will", "choices": {"A": "Shift left (favor reactants)", "B": "Shift right (favor products)", "C": "Have no effect", "D": "Decrease the equilibrium constant"}, "answer": "B"}, {"id": 131, "topic": "Le Chatelier's Principle", "stem": "For an endothermic reaction (ΔH > 0), decreasing the temperature will", "choices": {"A": "Shift equilibrium toward reactants", "B": "Shift equilibrium toward products", "C": "Have no effect on equilibrium", "D": "Increase the reaction rate"}, "answer": "A"}, {"id": 132, "topic": "Le Chatelier's Principle", "stem": "In the Haber process (N₂ + 3H₂ ⇌ 2NH₃, ΔH < 0), what conditions favor ammonia production?", "choices": {"A": "High temperature and low pressure", "B": "Low temperature and high pressure", "C": "High temperature and high pressure", "D": "Low temperature and low pressure"}, "answer": "B"}, {"id": 133, "topic": "Le Chatelier's Principle", "stem": "For the reaction CO(g) + 3H₂(g) ⇌ CH₄(g) + H₂O(g), if H₂ is removed, the equilibrium will", "choices": {"A": "Not shift", "B": "Shift right (toward products)", "C": "Shift left (toward reactants)", "D": "Reverse"}, "answer": "C"}, {"id": 134, "topic": "Le Chatelier's Principle", "stem": "If an inert (unreactive) gas is added to a reaction at constant volume, the equilibrium will", "choices": {"A": "Not shift", "B": "Shift left", "C": "Shift right", "D": "Reverse"}, "answer": "A"}, {"id": 135, "topic": "Le Chatelier's Principle", "stem": "For the reaction N₂O₄(g) ⇌ 2NO₂(g) (endothermic), increasing temperature will", "choices": {"A": "Shift left (toward N₂O₄)", "B": "Decrease the equilibrium constant", "C": "Have no effect", "D": "Shift right (toward NO₂)"}, "answer": "D"}, {"id": 136, "topic": "Le Chatelier's Principle", "stem": "In a reaction with 5 moles of gas on the left and 3 moles on the right, decreasing the volume will", "choices": {"A": "Shift left", "B": "Reverse the reaction", "C": "Have no effect", "D": "Shift right"}, "answer": "D"}, {"id": 137, "topic": "Le Chatelier's Principle", "stem": "For the equilibrium 2NH₃(g) ⇌ N₂(g) + 3H₂(g), if NH₃ is removed, the equilibrium will", "choices": {"A": "Shift right (toward products)", "B": "Double the equilibrium constant", "C": "Not shift", "D": "Shift left (toward NH₃)"}, "answer": "D"}, {"id": 138, "topic": "Le Chatelier's Principle", "stem": "Adding a product to the reaction 2A ⇌ B at equilibrium will cause", "choices": {"A": "Equilibrium to shift right", "B": "Equilibrium to shift left", "C": "No shift in equilibrium", "D": "Increased reaction rate in the forward direction"}, "answer": "B"}, {"id": 139, "topic": "Le Chatelier's Principle", "stem": "For the reaction C(s) + H₂O(g) ⇌ CO(g) + H₂(g), which is endothermic, decreasing temperature will", "choices": {"A": "Shift right (toward products)", "B": "Shift left (toward reactants)", "C": "Have no effect on equilibrium", "D": "Increase product formation"}, "answer": "B"}, {"id": 140, "topic": "Le Chatelier's Principle", "stem": "In the Haber process, why is high pressure used industrially?", "choices": {"A": "It slows down the reaction", "B": "It decreases the amount of N₂ needed", "C": "It shifts equilibrium toward products (NH₃)", "D": "It increases the reaction temperature"}, "answer": "C"}, {"id": 141, "topic": "Le Chatelier's Principle", "stem": "For the reaction 2NO(g) + O₂(g) ⇌ 2NO₂(g), decreasing the volume will", "choices": {"A": "Shift left (toward reactants)", "B": "Reverse the reaction", "C": "Have no effect on position", "D": "Shift right (toward products)"}, "answer": "D"}, {"id": 142, "topic": "Le Chatelier's Principle", "stem": "A catalyst is added to the equilibrium N₂ + 3H₂ ⇌ 2NH₃. The equilibrium position will", "choices": {"A": "Remain unchanged", "B": "Shift toward reactants", "C": "Shift toward products", "D": "Change based on the catalyst type"}, "answer": "A"}, {"id": 143, "topic": "Le Chatelier's Principle", "stem": "For the exothermic reaction 2SO₂(g) + O₂(g) ⇌ 2SO₃(g), lowering temperature will", "choices": {"A": "Shift left (toward reactants)", "B": "Have no effect", "C": "Shift right (toward products)", "D": "Slow the reaction significantly"}, "answer": "C"}, {"id": 144, "topic": "Le Chatelier's Principle", "stem": "In a gas phase reaction, increasing total pressure by decreasing volume when moles of gas are unequal will", "choices": {"A": "Shift toward the side with fewer moles of gas", "B": "Always shift left regardless of mole counts", "C": "Always shift right regardless of mole counts", "D": "Have no effect on equilibrium position"}, "answer": "A"}, {"id": 145, "topic": "Le Chatelier's Principle", "stem": "For the reaction A(g) + B(g) ⇌ 2C(g) (3 moles left, 2 moles right), increasing pressure will", "choices": {"A": "Shift left", "B": "Double the equilibrium constant", "C": "Have no effect", "D": "Shift right"}, "answer": "D"}, {"id": 146, "topic": "Le Chatelier's Principle", "stem": "If the temperature of an endothermic reaction is increased, the equilibrium constant will", "choices": {"A": "Decrease", "B": "Increase", "C": "Remain the same", "D": "Become negative"}, "answer": "B"}, {"id": 147, "topic": "Le Chatelier's Principle", "stem": "For the reaction 2N₂O₅(g) ⇌ 4NO₂(g) + O₂(g), if O₂ is added, the equilibrium will", "choices": {"A": "Shift right", "B": "Not shift", "C": "Shift left", "D": "Reverse"}, "answer": "C"}, {"id": 148, "topic": "Le Chatelier's Principle", "stem": "At equilibrium, applying Le Chatelier's principle means the system will", "choices": {"A": "Shift to counteract the disturbance", "B": "Always shift toward reactants", "C": "Always shift toward products", "D": "Remain completely static"}, "answer": "A"}, {"id": 149, "topic": "Le Chatelier's Principle", "stem": "For an exothermic reaction, which condition favors products?", "choices": {"A": "Increasing temperature", "B": "Adding a catalyst", "C": "Decreasing temperature", "D": "Decreasing pressure"}, "answer": "C"}, {"id": 150, "topic": "Le Chatelier's Principle", "stem": "For the reaction 4NH₃(g) + 5O₂(g) ⇌ 4NO(g) + 6H₂O(g), decreasing the volume at constant temperature will", "choices": {"A": "Shift right (toward NO and H₂O)", "B": "Have no effect on equilibrium position", "C": "Shift left (toward NH₃ and O₂)", "D": "Increase the equilibrium constant"}, "answer": "C"}];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandomQuestions(bank, n) {
+  const k = Math.min(n, bank.length);
+  return shuffle(bank).slice(0, k);
+}
+
+function buildQuizQuestions() {
+  const picked = pickRandomQuestions(QUESTION_BANK, NUM_QUESTIONS);
+  return picked.map((q, idx) => {
+    const letters = ["A","B","C","D"];
+    const choicesArr = letters.map(L => ({ text: q.choices[L], isCorrect: L === q.answer }));
+    const shuffled = shuffle(choicesArr);
+    const newChoices = {};
+    let newCorrect = null;
+    shuffled.forEach((c, i) => {
+      const newL = letters[i];
+      newChoices[newL] = c.text;
+      if (c.isCorrect) newCorrect = newL;
+    });
+    return {
+      displayIndex: idx + 1,
+      bankId: q.id,
+      topic: q.topic,
+      stem: q.stem,
+      choices: newChoices,
+      correct: newCorrect,
+      selected: null,
+    };
+  });
+}
+
+let quiz = [];
+let timerInterval = null;
+let endTime = null;
+let submitted = false;
+let studentName = "";
+
+function renderQuestions() {
+  const c = document.getElementById("questionsContainer");
+  c.innerHTML = "";
+  quiz.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    card.id = "q-" + qi;
+    let html = '<div class="qhead">Question ' + q.displayIndex + ' of ' + NUM_QUESTIONS + '</div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      const id = "q" + qi + "_" + L;
+      html += '<label class="choice" data-q="' + qi + '" data-l="' + L + '">';
+      html += '<input type="radio" name="q' + qi + '" value="' + L + '" id="' + id + '"> ';
+      html += '<strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]);
+      html += '</label>';
+    });
+    card.innerHTML = html;
+    c.appendChild(card);
+  });
+  c.addEventListener("change", e => {
+    if (e.target && e.target.type === "radio") {
+      const qi = parseInt(e.target.name.slice(1), 10);
+      quiz[qi].selected = e.target.value;
+      const labels = document.querySelectorAll('label.choice[data-q="' + qi + '"]');
+      labels.forEach(lb => lb.classList.toggle("selected", lb.getAttribute("data-l") === e.target.value));
+    }
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function startTimer() {
+  endTime = Date.now() + TIME_LIMIT_SEC * 1000;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+}
+function updateTimer() {
+  const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById("timerTime").textContent =
+    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  const t = document.getElementById("timer");
+  t.classList.toggle("warning", remaining <= 300 && remaining > 60);
+  t.classList.toggle("critical", remaining <= 60);
+  if (remaining <= 0 && !submitted) {
+    clearInterval(timerInterval);
+    submitQuiz(true);
+  }
+}
+
+function submitQuiz(autoSubmitted) {
+  if (submitted) return;
+  const unanswered = quiz.filter(q => !q.selected).length;
+  if (!autoSubmitted && unanswered > 0) {
+    if (!confirm("You have " + unanswered + " unanswered question(s). Submit anyway?")) return;
+  }
+  submitted = true;
+  if (timerInterval) clearInterval(timerInterval);
+
+  let correct = 0;
+  quiz.forEach(q => { if (q.selected === q.correct) correct++; });
+  const total = quiz.length;
+  const pct = Math.round((correct / total) * 100);
+  const passed = pct >= PASS_PERCENT;
+
+  document.getElementById("screen-quiz").classList.add("hidden");
+  const rs = document.getElementById("screen-results");
+  rs.classList.remove("hidden");
+  document.getElementById("scoreDisplay").textContent = correct + "/" + total + "  (" + pct + "%)";
+  document.getElementById("scoreDisplay").className = "score " + (passed ? "pass" : "fail");
+  document.getElementById("passLabel").innerHTML = passed
+    ? '<strong style="color:var(--good);">PASS — meets 80% standard</strong>'
+    : '<strong style="color:var(--bad);">DID NOT PASS — complete remediation before retake</strong>';
+  document.getElementById("studentResultLabel").textContent =
+    studentName + (autoSubmitted ? " · auto-submitted (time expired)" : "");
+  const now = new Date();
+  const ts = now.toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+  document.getElementById("timestampLabel").textContent = "Completed: " + ts;
+
+  const rev = document.getElementById("reviewContainer");
+  rev.innerHTML = "<h2 style='margin-top:0;'>Question Review</h2>";
+  quiz.forEach((q) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    let html = '<div class="qhead">Q' + q.displayIndex + ' &middot; <span style="color:var(--muted);font-weight:400;">Topic: ' + escapeHtml(q.topic || "") + ' &middot; Bank #' + q.bankId + '</span></div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      let cls = "choice";
+      if (L === q.correct) cls += " correct";
+      if (L === q.selected && q.selected !== q.correct) cls += " incorrect";
+      let mark = "";
+      if (L === q.correct) mark = " ✓ correct";
+      if (L === q.selected && q.selected !== q.correct) mark = " ✗ your answer";
+      else if (L === q.selected && q.selected === q.correct) mark = " ✓ your answer";
+      html += '<div class="' + cls + '"><strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]) + '<em style="color:var(--muted);">' + mark + '</em></div>';
+    });
+    if (!q.selected) {
+      html += '<div style="color:var(--bad); font-size:13px; margin-top:6px;"><em>Not answered</em></div>';
+    }
+    card.innerHTML = html;
+    rev.appendChild(card);
+  });
+
+  window.scrollTo(0, 0);
+}
+
+document.getElementById("btnStart").addEventListener("click", () => {
+  const nm = document.getElementById("studentName").value.trim();
+  if (!nm) { alert("Please enter your full name."); return; }
+  studentName = nm;
+  document.getElementById("studentLabel").textContent = nm;
+  quiz = buildQuizQuestions();
+  document.getElementById("screen-start").classList.add("hidden");
+  document.getElementById("screen-quiz").classList.remove("hidden");
+  renderQuestions();
+  startTimer();
+  window.addEventListener("beforeunload", e => {
+    if (!submitted) { e.preventDefault(); e.returnValue = ""; }
+  });
+});
+document.getElementById("btnSubmit").addEventListener("click", () => submitQuiz(false));
+</script>
+</body>
+</html>
