@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CHEM 3A — Tier 4 Skill Check</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --accent: #2a5d8f;
+    --good: #1f7a3a;
+    --bad: #b22d2d;
+    --warn: #c46c00;
+    --border: #d9d9d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 24px 20px 80px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+  input[type="text"] {
+    width: 100%; font-size: 16px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff;
+  }
+  button {
+    background: var(--accent); color: white; border: none;
+    padding: 12px 20px; border-radius: 6px; font-size: 15px;
+    font-weight: 600; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { background: #999; cursor: not-allowed; }
+  button.success { background: var(--good); }
+  .timer {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600;
+  }
+  .timer.warning { background: #fff4e0; border-color: var(--warn); color: var(--warn); }
+  .timer.critical { background: #ffe5e5; border-color: var(--bad); color: var(--bad); }
+  .timer-time { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .qcard { margin-bottom: 14px; }
+  .qhead { font-weight: 700; margin-bottom: 8px; font-size: 15px; color: var(--accent); }
+  .qstem { white-space: pre-wrap; margin-bottom: 12px; font-size: 16px; }
+  .choice {
+    display: block; padding: 10px 12px; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; background: #fafaf7;
+    transition: background 0.1s;
+  }
+  .choice:hover { background: #eef2f7; }
+  .choice input { margin-right: 10px; }
+  .choice.selected { background: #dde9f5; border-color: var(--accent); }
+  .choice.correct { background: #def5e1; border-color: var(--good); }
+  .choice.incorrect { background: #f8d7d7; border-color: var(--bad); }
+  .results-summary {
+    background: #fff; border: 2px solid var(--accent);
+    border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .score { font-size: 42px; font-weight: 700; margin: 8px 0; }
+  .pass { color: var(--good); }
+  .fail { color: var(--bad); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .footer-note {
+    background: #fffce5; border-left: 4px solid var(--warn);
+    padding: 10px 14px; margin-top: 14px; font-size: 14px; border-radius: 4px;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="screen-start">
+    <h1>CHEM 3A — Tier 4 Skill Check</h1>
+    <div class="sub">Chemical Reactions & Redox · 15 questions · 30 minutes · 80% to pass</div>
+
+    <div class="card">
+      <p><strong>Instructions:</strong></p>
+      <ul>
+        <li>Closed-note assessment.</li>
+        <li>You have <strong>30 minutes</strong>. Timer auto-submits at zero.</li>
+        <li>Pick the best answer. You can change answers until you submit.</li>
+        <li>When done, click <strong>Submit</strong>, then take a screenshot of your score.</li>
+      </ul>
+      <label for="studentName">Your full name (required):</label>
+      <input id="studentName" type="text" placeholder="Last, First" autocomplete="name">
+      <div style="margin-top:14px;">
+        <button id="btnStart">Start Skill Check</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-quiz" class="hidden">
+    <div class="timer" id="timer">
+      <div>Skill Check in progress — <span id="studentLabel"></span></div>
+      <div class="timer-time" id="timerTime">30:00</div>
+    </div>
+    <div id="questionsContainer"></div>
+    <div class="actions">
+      <button id="btnSubmit" class="success">Submit Quiz</button>
+    </div>
+  </div>
+
+  <div id="screen-results" class="hidden">
+    <div class="results-summary">
+      <div style="font-size:14px; color:var(--muted); letter-spacing:0.5px;">CHEM 3A · TIER 4 SKILL CHECK</div>
+      <div class="score" id="scoreDisplay">--/15</div>
+      <div id="passLabel"></div>
+      <div id="studentResultLabel" style="margin-top:10px; font-size:18px; font-weight:600;"></div>
+      <div id="timestampLabel" style="margin-top:4px; color: var(--muted); font-size:13px;"></div>
+    </div>
+    <div class="footer-note" style="text-align:center;">
+      <strong>📸 Take a screenshot of this page</strong> and show it to Prof. Gilley before you leave.
+    </div>
+    <div id="reviewContainer" style="margin-top:24px;"></div>
+  </div>
+
+</div>
+
+<script>
+const QUIZ_TITLE = "CHEM 3A — Tier 4 Skill Check";
+const NUM_QUESTIONS = 15;
+const TIME_LIMIT_SEC = 30 * 60;
+const PASS_PERCENT = 80;
+
+const QUESTION_BANK = [{"id": 1, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of O₂?\n_____ C₂H₆ + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "5", "B": "6", "C": "7", "D": "8"}, "answer": "C"}, {"id": 2, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of O₂?\n_____ CH₄ + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 3, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of H₂O?\n_____ C₃H₈ + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "3", "B": "4", "C": "5", "D": "8"}, "answer": "B"}, {"id": 4, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of CO₂?\n_____ C₄H₁₀ + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "4", "B": "5", "C": "6", "D": "8"}, "answer": "D"}, {"id": 5, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of O₂?\n_____ C₂H₂ + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "3", "B": "4", "C": "5", "D": "7"}, "answer": "C"}, {"id": 6, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of O₂?\n_____ C₆H₁₂O₆ + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "3", "B": "6", "C": "9", "D": "12"}, "answer": "B"}, {"id": 7, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of H₂O?\n_____ C₂H₅OH + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "2", "B": "3", "C": "4", "D": "6"}, "answer": "B"}, {"id": 8, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of CO₂?\n_____ C₅H₁₂ + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "4", "B": "5", "C": "6", "D": "8"}, "answer": "B"}, {"id": 9, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of O₂?\n_____ C₃H₆ + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "5", "B": "7", "C": "9", "D": "12"}, "answer": "C"}, {"id": 10, "topic": "Balancing Combustion Equations", "stem": "When the following equation is balanced with the smallest whole-number coefficients, what coefficient is needed in front of O₂?\n_____ C₂H₄ + _____ O₂ → _____ CO₂ + _____ H₂O", "choices": {"A": "2", "B": "3", "C": "4", "D": "5"}, "answer": "B"}, {"id": 11, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation Fe₂O₃ + C → Fe + CO₂ is balanced with the smallest whole-number coefficients, what is the coefficient of Fe?", "choices": {"A": "2", "B": "3", "C": "4", "D": "6"}, "answer": "C"}, {"id": 12, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation Al + O₂ → Al₂O₃ is balanced with the smallest whole-number coefficients, what is the coefficient of Al?", "choices": {"A": "2", "B": "3", "C": "4", "D": "6"}, "answer": "C"}, {"id": 13, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation KClO₃ → KCl + O₂ is balanced with the smallest whole-number coefficients, what is the coefficient of KClO₃?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 14, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation Na + Cl₂ → NaCl is balanced, what is the coefficient of Na?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 15, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation H₂O₂ → H₂O + O₂ is balanced with the smallest whole-number coefficients, what is the coefficient of H₂O₂?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 16, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation Mg + N₂ → Mg₃N₂ is balanced, what is the coefficient of Mg?", "choices": {"A": "1", "B": "2", "C": "3", "D": "6"}, "answer": "C"}, {"id": 17, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation P + O₂ → P₂O₅ is balanced with the smallest whole-number coefficients, what is the coefficient of O₂?", "choices": {"A": "2", "B": "4", "C": "5", "D": "10"}, "answer": "C"}, {"id": 18, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation Fe + O₂ → Fe₂O₃ is balanced with the smallest whole-number coefficients, what is the coefficient of Fe?", "choices": {"A": "2", "B": "3", "C": "4", "D": "6"}, "answer": "C"}, {"id": 19, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation H₂O → H₂ + O₂ is balanced with the smallest whole-number coefficients, what is the coefficient of H₂O?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 20, "topic": "Balancing Synthesis & Decomposition Equations", "stem": "When the equation Ca + H₂O → Ca(OH)₂ + H₂ is balanced with the smallest whole-number coefficients, what is the coefficient of H₂O?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 21, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation Zn + HCl → ZnCl₂ + H₂ is balanced with the smallest whole-number coefficients, what is the coefficient of HCl?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 22, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation Fe + CuSO₄ → FeSO₄ + Cu is balanced, what is the coefficient of Fe?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "A"}, {"id": 23, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation Al + HCl → AlCl₃ + H₂ is balanced with the smallest whole-number coefficients, what is the coefficient of HCl?", "choices": {"A": "2", "B": "3", "C": "6", "D": "9"}, "answer": "C"}, {"id": 24, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation BaCl₂ + Na₂SO₄ → BaSO₄ + NaCl is balanced, what is the coefficient of NaCl?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 25, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation Mg + HCl → MgCl₂ + H₂ is balanced, what is the coefficient of HCl?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 26, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation AgNO₃ + NaCl → AgCl + NaNO₃ is balanced, what is the sum of all coefficients?", "choices": {"A": "2", "B": "3", "C": "4", "D": "6"}, "answer": "C"}, {"id": 27, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation Al + CuCl₂ → AlCl₃ + Cu is balanced with the smallest whole-number coefficients, what is the coefficient of CuCl₂?", "choices": {"A": "2", "B": "3", "C": "4", "D": "6"}, "answer": "B"}, {"id": 28, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation Pb(NO₃)₂ + KI → PbI₂ + KNO₃ is balanced, what is the coefficient of KI?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 29, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation Fe + H₂SO₄ → FeSO₄ + H₂ is balanced, what is the coefficient of H₂SO₄?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "A"}, {"id": 30, "topic": "Balancing Single & Double Replacement Equations", "stem": "When the equation Ca(OH)₂ + HCl → CaCl₂ + H₂O is balanced, what is the coefficient of HCl?", "choices": {"A": "1", "B": "2", "C": "3", "D": "4"}, "answer": "B"}, {"id": 31, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when the following equation is balanced with the smallest whole numbers?\nN₂ + H₂ → NH₃", "choices": {"A": "4", "B": "6", "C": "8", "D": "10"}, "answer": "B"}, {"id": 32, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when balanced?\nH₂ + O₂ → H₂O", "choices": {"A": "4", "B": "5", "C": "6", "D": "7"}, "answer": "B"}, {"id": 33, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when balanced?\nFe + O₂ → Fe₂O₃", "choices": {"A": "7", "B": "8", "C": "9", "D": "10"}, "answer": "C"}, {"id": 34, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when balanced?\nAl + Cl₂ → AlCl₃", "choices": {"A": "5", "B": "6", "C": "7", "D": "9"}, "answer": "C"}, {"id": 35, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when balanced?\nNa + H₂O → NaOH + H₂", "choices": {"A": "5", "B": "6", "C": "7", "D": "8"}, "answer": "C"}, {"id": 36, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when balanced?\nP + O₂ → P₂O₅", "choices": {"A": "9", "B": "11", "C": "13", "D": "15"}, "answer": "B"}, {"id": 37, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when balanced?\nCa + HCl → CaCl₂ + H₂", "choices": {"A": "4", "B": "5", "C": "6", "D": "7"}, "answer": "B"}, {"id": 38, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when balanced?\nKClO₃ → KCl + O₂", "choices": {"A": "5", "B": "6", "C": "7", "D": "8"}, "answer": "C"}, {"id": 39, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when balanced?\nMg + HCl → MgCl₂ + H₂", "choices": {"A": "4", "B": "5", "C": "6", "D": "7"}, "answer": "B"}, {"id": 40, "topic": "Sum of Coefficients", "stem": "What is the sum of all coefficients when balanced?\nAl + H₂SO₄ → Al₂(SO₄)₃ + H₂", "choices": {"A": "8", "B": "9", "C": "10", "D": "12"}, "answer": "B"}, {"id": 41, "topic": "Classify Reaction Type from Equation", "stem": "The reaction 2Na + Cl₂ → 2NaCl is classified as a:", "choices": {"A": "Decomposition reaction", "B": "Single replacement reaction", "C": "Synthesis reaction", "D": "Double replacement reaction"}, "answer": "C"}, {"id": 42, "topic": "Classify Reaction Type from Equation", "stem": "The reaction CaCO₃ → CaO + CO₂ is classified as a:", "choices": {"A": "Synthesis reaction", "B": "Decomposition reaction", "C": "Single replacement reaction", "D": "Combustion reaction"}, "answer": "B"}, {"id": 43, "topic": "Classify Reaction Type from Equation", "stem": "The reaction Zn + CuSO₄ → ZnSO₄ + Cu is classified as a:", "choices": {"A": "Synthesis reaction", "B": "Decomposition reaction", "C": "Single replacement reaction", "D": "Double replacement reaction"}, "answer": "C"}, {"id": 44, "topic": "Classify Reaction Type from Equation", "stem": "The reaction AgNO₃ + NaCl → AgCl + NaNO₃ is classified as a:", "choices": {"A": "Synthesis reaction", "B": "Decomposition reaction", "C": "Single replacement reaction", "D": "Double replacement reaction"}, "answer": "D"}, {"id": 45, "topic": "Classify Reaction Type from Equation", "stem": "The reaction 2H₂ + O₂ → 2H₂O is classified as a:", "choices": {"A": "Synthesis reaction", "B": "Decomposition reaction", "C": "Single replacement reaction", "D": "Combustion reaction"}, "answer": "A"}, {"id": 46, "topic": "Classify Reaction Type from Equation", "stem": "The reaction 2KClO₃ → 2KCl + 3O₂ is classified as a:", "choices": {"A": "Synthesis reaction", "B": "Decomposition reaction", "C": "Combustion reaction", "D": "Double replacement reaction"}, "answer": "B"}, {"id": 47, "topic": "Classify Reaction Type from Equation", "stem": "The reaction Fe + 2HCl → FeCl₂ + H₂ is classified as a:", "choices": {"A": "Synthesis reaction", "B": "Decomposition reaction", "C": "Single replacement reaction", "D": "Double replacement reaction"}, "answer": "C"}, {"id": 48, "topic": "Classify Reaction Type from Equation", "stem": "The reaction Pb(NO₃)₂ + 2KI → PbI₂ + 2KNO₃ is classified as a:", "choices": {"A": "Synthesis reaction", "B": "Decomposition reaction", "C": "Single replacement reaction", "D": "Double replacement reaction"}, "answer": "D"}, {"id": 49, "topic": "Classify Reaction Type from Equation", "stem": "The reaction 4Fe + 3O₂ → 2Fe₂O₃ is classified as a:", "choices": {"A": "Synthesis reaction", "B": "Decomposition reaction", "C": "Single replacement reaction", "D": "Combustion reaction"}, "answer": "A"}, {"id": 50, "topic": "Classify Reaction Type from Equation", "stem": "The reaction Mg + 2HBr → MgBr₂ + H₂ is classified as a:", "choices": {"A": "Synthesis reaction", "B": "Decomposition reaction", "C": "Single replacement reaction", "D": "Double replacement reaction"}, "answer": "C"}, {"id": 51, "topic": "Classify Reaction Type from Description", "stem": "In cellular respiration, glucose reacts with oxygen to produce carbon dioxide and water. This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Combustion", "D": "Single replacement"}, "answer": "C"}, {"id": 52, "topic": "Classify Reaction Type from Description", "stem": "When a strip of magnesium metal is placed in a solution of copper(II) sulfate, the magnesium dissolves and solid copper appears. This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Single replacement", "D": "Double replacement"}, "answer": "C"}, {"id": 53, "topic": "Classify Reaction Type from Description", "stem": "When solid calcium carbonate is heated strongly, it breaks apart into calcium oxide powder and carbon dioxide gas. This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Combustion", "D": "Double replacement"}, "answer": "B"}, {"id": 54, "topic": "Classify Reaction Type from Description", "stem": "When solutions of sodium hydroxide and hydrochloric acid are mixed, water and dissolved sodium chloride form. This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Single replacement", "D": "Double replacement"}, "answer": "D"}, {"id": 55, "topic": "Classify Reaction Type from Description", "stem": "A piece of iron slowly combines with oxygen from the air to form rust (iron(III) oxide). This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Single replacement", "D": "Combustion"}, "answer": "A"}, {"id": 56, "topic": "Classify Reaction Type from Description", "stem": "A propane grill burns propane gas with oxygen from the air, producing carbon dioxide and water vapor. This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Combustion", "D": "Single replacement"}, "answer": "C"}, {"id": 57, "topic": "Classify Reaction Type from Description", "stem": "When a solution of lead(II) nitrate is mixed with a solution of potassium chromate, a bright yellow solid forms and settles to the bottom. This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Single replacement", "D": "Double replacement"}, "answer": "D"}, {"id": 58, "topic": "Classify Reaction Type from Description", "stem": "When aluminum foil is placed in a solution of hydrochloric acid, bubbles form and the foil slowly dissolves. This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Single replacement", "D": "Double replacement"}, "answer": "C"}, {"id": 59, "topic": "Classify Reaction Type from Description", "stem": "When hydrogen peroxide sitting in a brown bottle slowly breaks down over time, oxygen gas and water are produced. This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Combustion", "D": "Single replacement"}, "answer": "B"}, {"id": 60, "topic": "Classify Reaction Type from Description", "stem": "Nitrogen gas and hydrogen gas are combined under high pressure and temperature to form ammonia. This reaction is classified as:", "choices": {"A": "Synthesis", "B": "Decomposition", "C": "Combustion", "D": "Double replacement"}, "answer": "A"}, {"id": 61, "topic": "Chemical vs. Physical Changes", "stem": "Which of the following is a chemical change?", "choices": {"A": "Ice melting into water", "B": "Sugar dissolving in tea", "C": "Iron rusting in moist air", "D": "Cutting a piece of paper"}, "answer": "C"}, {"id": 62, "topic": "Chemical vs. Physical Changes", "stem": "Which of the following is a physical change?", "choices": {"A": "Burning wood in a fireplace", "B": "Milk turning sour", "C": "Bending a copper wire", "D": "A nail rusting"}, "answer": "C"}, {"id": 63, "topic": "Chemical vs. Physical Changes", "stem": "Which observation is the best evidence that a chemical change has occurred?", "choices": {"A": "A solid dissolves when stirred into water", "B": "A new gas with a distinct odor is produced", "C": "A substance changes from solid to liquid when heated", "D": "The volume of a gas increases when temperature rises"}, "answer": "B"}, {"id": 64, "topic": "Chemical vs. Physical Changes", "stem": "Which of the following is a chemical change?", "choices": {"A": "Boiling water to make steam", "B": "Grinding salt into a fine powder", "C": "Tarnishing of silver jewelry", "D": "Mixing sand and gravel"}, "answer": "C"}, {"id": 65, "topic": "Chemical vs. Physical Changes", "stem": "A student heats a white powder and observes it turn black, release a gas, and leave behind a substance with different properties. This is best described as:", "choices": {"A": "A physical change because heat was applied", "B": "A physical change because the color changed", "C": "A chemical change because new substances formed", "D": "A chemical change because the temperature increased"}, "answer": "C"}, {"id": 66, "topic": "Chemical vs. Physical Changes", "stem": "Which of the following is a physical change?", "choices": {"A": "Frying an egg", "B": "A banana turning brown", "C": "Dissolving salt in water", "D": "Digesting food"}, "answer": "C"}, {"id": 67, "topic": "Chemical vs. Physical Changes", "stem": "Which observation does NOT indicate a chemical change?", "choices": {"A": "A precipitate forms when two solutions are mixed", "B": "A piece of dry ice sublimes into gas", "C": "A flame is produced during a reaction", "D": "The temperature rises when two substances are combined"}, "answer": "B"}, {"id": 68, "topic": "Chemical vs. Physical Changes", "stem": "Which of the following involves a chemical change?", "choices": {"A": "Evaporating sea water to obtain salt", "B": "Melting a gold bar", "C": "Photosynthesis in a leaf", "D": "Freezing juice into popsicles"}, "answer": "C"}, {"id": 69, "topic": "Chemical vs. Physical Changes", "stem": "A student mixes two clear, colorless solutions and a bright yellow solid immediately forms. This is best described as:", "choices": {"A": "A physical change because both solutions were liquids", "B": "A physical change because no gas was produced", "C": "A chemical change because a new solid substance formed", "D": "A chemical change because the volume decreased"}, "answer": "C"}, {"id": 70, "topic": "Chemical vs. Physical Changes", "stem": "Which of the following is a chemical change?", "choices": {"A": "Breaking a glass beaker", "B": "Compressing a gas in a syringe", "C": "Dissolving sugar in hot water", "D": "An antacid tablet fizzing in water"}, "answer": "D"}, {"id": 71, "topic": "Predicting Combustion Products", "stem": "What are the products of the combustion of propane (C₃H₈)?", "choices": {"A": "CO + H₂O", "B": "CO₂ + H₂O", "C": "C + H₂O", "D": "CO₂ + H₂"}, "answer": "B"}, {"id": 72, "topic": "Predicting Combustion Products", "stem": "What are the products of the complete combustion of methane (CH₄)?", "choices": {"A": "C + H₂O", "B": "CO + H₂", "C": "CO₂ + H₂O", "D": "CO₂ + H₂"}, "answer": "C"}, {"id": 73, "topic": "Predicting Combustion Products", "stem": "What are the products of the complete combustion of ethanol (C₂H₅OH)?", "choices": {"A": "CO₂ + H₂ + O₂", "B": "CO + H₂O", "C": "CO₂ + H₂O", "D": "C₂H₄ + H₂O"}, "answer": "C"}, {"id": 74, "topic": "Predicting Combustion Products", "stem": "Complete combustion of any hydrocarbon produces:", "choices": {"A": "Carbon monoxide and water", "B": "Carbon dioxide and hydrogen gas", "C": "Carbon dioxide and water", "D": "Carbon and water"}, "answer": "C"}, {"id": 75, "topic": "Predicting Combustion Products", "stem": "What are the products of the complete combustion of octane (C₈H₁₈)?", "choices": {"A": "CO + H₂O", "B": "CO₂ + H₂ + O₂", "C": "C + H₂O", "D": "CO₂ + H₂O"}, "answer": "D"}, {"id": 76, "topic": "Predicting Combustion Products", "stem": "The complete combustion of glucose (C₆H₁₂O₆) in cellular respiration produces:", "choices": {"A": "CO₂ + H₂", "B": "CO + H₂O + O₂", "C": "CO₂ + H₂O", "D": "C + H₂O + O₂"}, "answer": "C"}, {"id": 77, "topic": "Predicting Combustion Products", "stem": "What are the products when butane (C₄H₁₀) undergoes complete combustion?", "choices": {"A": "CO₂ + H₂", "B": "C + H₂O", "C": "CO + H₂O", "D": "CO₂ + H₂O"}, "answer": "D"}, {"id": 78, "topic": "Predicting Combustion Products", "stem": "A student burns acetylene (C₂H₂) in excess oxygen. The products of complete combustion are:", "choices": {"A": "CO + H₂", "B": "CO₂ + H₂O", "C": "C₂ + H₂O", "D": "CO₂ + H₂"}, "answer": "B"}, {"id": 79, "topic": "Predicting Combustion Products", "stem": "In incomplete combustion, carbon monoxide (CO) may form instead of CO₂. Which set of products represents COMPLETE combustion of pentane (C₅H₁₂)?", "choices": {"A": "CO + H₂O", "B": "C + CO + H₂O", "C": "CO₂ + H₂O", "D": "CO₂ + H₂"}, "answer": "C"}, {"id": 80, "topic": "Predicting Combustion Products", "stem": "The complete combustion of methanol (CH₃OH) produces:", "choices": {"A": "CO₂ + H₂", "B": "CO + H₂O", "C": "CO₂ + H₂O", "D": "C + H₂O + O₂"}, "answer": "C"}, {"id": 81, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What are the products when solid magnesium reacts with hydrochloric acid?\n**Activity Series (most active → least active):** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "MgCl + H₂", "B": "MgCl₂ + H₂", "C": "Mg(OH)₂ + HCl", "D": "No reaction occurs"}, "answer": "B"}, {"id": 82, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What are the products when zinc metal is placed in a copper(II) sulfate solution?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "CuZnSO₄", "B": "Cu₂SO₄ + Zn", "C": "ZnSO₄ + Cu", "D": "No reaction occurs"}, "answer": "C"}, {"id": 83, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What happens when a piece of copper wire is placed in a solution of silver nitrate?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Cu(NO₃)₂ + Ag", "B": "CuNO₃ + Ag", "C": "AgCu + NO₃", "D": "No reaction occurs"}, "answer": "A"}, {"id": 84, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What are the products when iron metal reacts with hydrochloric acid?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "FeCl₃ + H₂", "B": "FeCl₂ + H₂", "C": "FeH₂ + Cl₂", "D": "No reaction occurs"}, "answer": "B"}, {"id": 85, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What happens when aluminum foil is placed in a zinc chloride solution?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "AlCl₂ + Zn", "B": "AlCl₃ + Zn", "C": "ZnAl + Cl₂", "D": "No reaction occurs"}, "answer": "B"}, {"id": 86, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What are the products when calcium metal is placed in water?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "CaO + H₂", "B": "Ca(OH)₂ + H₂", "C": "CaH₂ + O₂", "D": "No reaction occurs"}, "answer": "B"}, {"id": 87, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What are the products when tin (Sn) metal is placed in a solution of iron(II) chloride?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "SnCl₂ + Fe", "B": "SnFe + Cl₂", "C": "FeSn + 2Cl", "D": "No reaction occurs"}, "answer": "D"}, {"id": 88, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What are the products when nickel metal reacts with hydrochloric acid?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "NiCl + H₂", "B": "NiCl₂ + H₂", "C": "NiH₂ + Cl₂", "D": "No reaction occurs"}, "answer": "B"}, {"id": 89, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What happens when a piece of lead metal is placed in a copper(II) nitrate solution?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Pb(NO₃)₂ + Cu", "B": "PbCu + NO₃", "C": "PbNO₃ + Cu", "D": "No reaction occurs"}, "answer": "A"}, {"id": 90, "topic": "Predicting Single Replacement Products (Activity Series Provided)", "stem": "Use the activity series below. What are the products when aluminum metal reacts with sulfuric acid (H₂SO₄)?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "AlSO₄ + H₂", "B": "Al₂(SO₄)₃ + H₂", "C": "Al₂S₃ + O₂ + H₂", "D": "No reaction occurs"}, "answer": "B"}, {"id": 91, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of lead(II) nitrate and potassium iodide are mixed, what precipitate forms?", "choices": {"A": "KNO₃", "B": "Pb(NO₃)₂", "C": "PbI₂", "D": "KI"}, "answer": "C"}, {"id": 92, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of silver nitrate and sodium chloride are mixed, what precipitate forms?", "choices": {"A": "NaNO₃", "B": "AgCl", "C": "AgNO₃", "D": "NaCl"}, "answer": "B"}, {"id": 93, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of barium chloride and sodium sulfate are mixed, what precipitate forms?", "choices": {"A": "NaCl", "B": "BaCl₂", "C": "BaSO₄", "D": "Na₂SO₄"}, "answer": "C"}, {"id": 94, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of calcium chloride and sodium carbonate are mixed, what precipitate forms?", "choices": {"A": "NaCl", "B": "CaCO₃", "C": "CaCl₂", "D": "Na₂CO₃"}, "answer": "B"}, {"id": 95, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of iron(III) chloride and sodium hydroxide are mixed, what precipitate forms?", "choices": {"A": "NaCl", "B": "Fe(OH)₃", "C": "FeCl₃", "D": "NaOH"}, "answer": "B"}, {"id": 96, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of copper(II) sulfate and sodium hydroxide are mixed, what precipitate forms?", "choices": {"A": "Na₂SO₄", "B": "CuSO₄", "C": "Cu(OH)₂", "D": "NaOH"}, "answer": "C"}, {"id": 97, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of silver nitrate and potassium bromide are mixed, what precipitate forms?", "choices": {"A": "KNO₃", "B": "AgBr", "C": "AgNO₃", "D": "KBr"}, "answer": "B"}, {"id": 98, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of lead(II) nitrate and sodium sulfate are mixed, what precipitate forms?", "choices": {"A": "NaNO₃", "B": "Pb(NO₃)₂", "C": "PbSO₄", "D": "Na₂SO₄"}, "answer": "C"}, {"id": 99, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of zinc sulfate and sodium hydroxide are mixed, what precipitate forms?", "choices": {"A": "Na₂SO₄", "B": "Zn(OH)₂", "C": "ZnSO₄", "D": "NaOH"}, "answer": "B"}, {"id": 100, "topic": "Double Replacement & Precipitate Prediction", "stem": "When aqueous solutions of calcium nitrate and sodium phosphate are mixed, what precipitate forms?", "choices": {"A": "NaNO₃", "B": "Ca(NO₃)₂", "C": "Ca₃(PO₄)₂", "D": "Na₃PO₄"}, "answer": "C"}, {"id": 101, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between aqueous sodium chloride and aqueous silver nitrate?", "choices": {"A": "Na⁺ + NO₃⁻ → NaNO₃", "B": "Ag⁺ + Cl⁻ → AgCl", "C": "AgNO₃ + NaCl → AgCl + NaNO₃", "D": "Na⁺ + Ag⁺ + Cl⁻ + NO₃⁻ → AgCl + Na⁺ + NO₃⁻"}, "answer": "B"}, {"id": 102, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between aqueous barium chloride and aqueous sodium sulfate?", "choices": {"A": "Na⁺ + Cl⁻ → NaCl", "B": "Ba²⁺ + SO₄²⁻ → BaSO₄", "C": "BaCl₂ + Na₂SO₄ → BaSO₄ + 2NaCl", "D": "Ba²⁺ + 2Cl⁻ + 2Na⁺ + SO₄²⁻ → BaSO₄ + 2Na⁺ + 2Cl⁻"}, "answer": "B"}, {"id": 103, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between HCl(aq) and NaOH(aq)?", "choices": {"A": "HCl + NaOH → NaCl + H₂O", "B": "Na⁺ + Cl⁻ → NaCl", "C": "H⁺ + OH⁻ → H₂O", "D": "H⁺ + Cl⁻ + Na⁺ + OH⁻ → Na⁺ + Cl⁻ + H₂O"}, "answer": "C"}, {"id": 104, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between aqueous lead(II) nitrate and aqueous potassium iodide?", "choices": {"A": "K⁺ + NO₃⁻ → KNO₃", "B": "Pb²⁺ + 2I⁻ → PbI₂", "C": "Pb(NO₃)₂ + 2KI → PbI₂ + 2KNO₃", "D": "Pb²⁺ + 2NO₃⁻ + 2K⁺ + 2I⁻ → PbI₂ + 2K⁺ + 2NO₃⁻"}, "answer": "B"}, {"id": 105, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between aqueous calcium chloride and aqueous sodium carbonate?", "choices": {"A": "Na⁺ + Cl⁻ → NaCl", "B": "Ca²⁺ + CO₃²⁻ → CaCO₃", "C": "CaCl₂ + Na₂CO₃ → CaCO₃ + 2NaCl", "D": "Ca²⁺ + 2Cl⁻ + 2Na⁺ + CO₃²⁻ → CaCO₃ + 2Na⁺ + 2Cl⁻"}, "answer": "B"}, {"id": 106, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between aqueous iron(III) chloride and aqueous sodium hydroxide?", "choices": {"A": "Na⁺ + Cl⁻ → NaCl", "B": "Fe³⁺ + 3OH⁻ → Fe(OH)₃", "C": "FeCl₃ + 3NaOH → Fe(OH)₃ + 3NaCl", "D": "Fe³⁺ + 3Cl⁻ + 3Na⁺ + 3OH⁻ → Fe(OH)₃ + 3Na⁺ + 3Cl⁻"}, "answer": "B"}, {"id": 107, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between H₂SO₄(aq) and KOH(aq)?", "choices": {"A": "K⁺ + SO₄²⁻ → K₂SO₄", "B": "H⁺ + OH⁻ → H₂O", "C": "H₂SO₄ + 2KOH → K₂SO₄ + 2H₂O", "D": "2H⁺ + SO₄²⁻ + 2K⁺ + 2OH⁻ → 2K⁺ + SO₄²⁻ + 2H₂O"}, "answer": "B"}, {"id": 108, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between aqueous copper(II) sulfate and aqueous sodium hydroxide?", "choices": {"A": "Na⁺ + SO₄²⁻ → Na₂SO₄", "B": "Cu²⁺ + 2OH⁻ → Cu(OH)₂", "C": "CuSO₄ + 2NaOH → Cu(OH)₂ + Na₂SO₄", "D": "Cu²⁺ + SO₄²⁻ + 2Na⁺ + 2OH⁻ → Cu(OH)₂ + 2Na⁺ + SO₄²⁻"}, "answer": "B"}, {"id": 109, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between aqueous silver nitrate and aqueous potassium bromide?", "choices": {"A": "K⁺ + NO₃⁻ → KNO₃", "B": "Ag⁺ + Br⁻ → AgBr", "C": "AgNO₃ + KBr → AgBr + KNO₃", "D": "Ag⁺ + NO₃⁻ + K⁺ + Br⁻ → AgBr + K⁺ + NO₃⁻"}, "answer": "B"}, {"id": 110, "topic": "Net Ionic Equations", "stem": "What is the net ionic equation for the reaction between HNO₃(aq) and Ba(OH)₂(aq)?", "choices": {"A": "Ba²⁺ + 2NO₃⁻ → Ba(NO₃)₂", "B": "H⁺ + OH⁻ → H₂O", "C": "2HNO₃ + Ba(OH)₂ → Ba(NO₃)₂ + 2H₂O", "D": "2H⁺ + 2NO₃⁻ + Ba²⁺ + 2OH⁻ → Ba²⁺ + 2NO₃⁻ + 2H₂O"}, "answer": "B"}, {"id": 111, "topic": "Identifying Spectator Ions", "stem": "In the reaction between HCl(aq) and NaOH(aq), which species are the spectator ions?", "choices": {"A": "H⁺ and OH⁻", "B": "Na⁺ and Cl⁻", "C": "HCl and NaOH", "D": "NaCl and H₂O"}, "answer": "B"}, {"id": 112, "topic": "Identifying Spectator Ions", "stem": "In the reaction between AgNO₃(aq) and NaCl(aq), which species are the spectator ions?", "choices": {"A": "Ag⁺ and Cl⁻", "B": "Na⁺ and NO₃⁻", "C": "AgCl and NaNO₃", "D": "Ag⁺ and NO₃⁻"}, "answer": "B"}, {"id": 113, "topic": "Identifying Spectator Ions", "stem": "In the reaction between BaCl₂(aq) and Na₂SO₄(aq), which species are the spectator ions?", "choices": {"A": "Ba²⁺ and SO₄²⁻", "B": "Na⁺ and Cl⁻", "C": "BaSO₄ and NaCl", "D": "Ba²⁺ and Cl⁻"}, "answer": "B"}, {"id": 114, "topic": "Identifying Spectator Ions", "stem": "In the reaction between Pb(NO₃)₂(aq) and KI(aq), which species are the spectator ions?", "choices": {"A": "Pb²⁺ and I⁻", "B": "K⁺ and NO₃⁻", "C": "PbI₂ and KNO₃", "D": "Pb²⁺ and NO₃⁻"}, "answer": "B"}, {"id": 115, "topic": "Identifying Spectator Ions", "stem": "In the reaction between H₂SO₄(aq) and KOH(aq), which species are the spectator ions?", "choices": {"A": "H⁺ and OH⁻", "B": "K⁺ and SO₄²⁻", "C": "H₂SO₄ and KOH", "D": "K₂SO₄ and H₂O"}, "answer": "B"}, {"id": 116, "topic": "Identifying Spectator Ions", "stem": "Which statement best defines a spectator ion?", "choices": {"A": "An ion that forms a precipitate", "B": "An ion that is present in solution but does not participate in the reaction", "C": "An ion that is consumed during the reaction", "D": "An ion that changes oxidation state"}, "answer": "B"}, {"id": 117, "topic": "Identifying Spectator Ions", "stem": "In the reaction between FeCl₃(aq) and NaOH(aq), which species are the spectator ions?", "choices": {"A": "Fe³⁺ and OH⁻", "B": "Na⁺ and Cl⁻", "C": "Fe(OH)₃ and NaCl", "D": "Fe³⁺ and Cl⁻"}, "answer": "B"}, {"id": 118, "topic": "Identifying Spectator Ions", "stem": "In the reaction between CuSO₄(aq) and NaOH(aq), which species are the spectator ions?", "choices": {"A": "Cu²⁺ and OH⁻", "B": "Na⁺ and SO₄²⁻", "C": "Cu(OH)₂ and Na₂SO₄", "D": "Cu²⁺ and SO₄²⁻"}, "answer": "B"}, {"id": 119, "topic": "Identifying Spectator Ions", "stem": "In the reaction between Ca(NO₃)₂(aq) and Na₂CO₃(aq), the spectator ions are:", "choices": {"A": "Ca²⁺ and CO₃²⁻", "B": "Na⁺ and NO₃⁻", "C": "CaCO₃ and NaNO₃", "D": "Ca²⁺ and NO₃⁻"}, "answer": "B"}, {"id": 120, "topic": "Identifying Spectator Ions", "stem": "In the reaction between HNO₃(aq) and NaOH(aq), which species are the spectator ions?", "choices": {"A": "H⁺ and OH⁻", "B": "Na⁺ and NO₃⁻", "C": "HNO₃ and NaOH", "D": "NaNO₃ and H₂O"}, "answer": "B"}, {"id": 121, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of sulfur in H₂SO₄?", "choices": {"A": "+2", "B": "+4", "C": "+6", "D": "-2"}, "answer": "C"}, {"id": 122, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of nitrogen in HNO₃?", "choices": {"A": "+1", "B": "+3", "C": "+5", "D": "-3"}, "answer": "C"}, {"id": 123, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of chromium in K₂Cr₂O₇?", "choices": {"A": "+2", "B": "+3", "C": "+6", "D": "+7"}, "answer": "C"}, {"id": 124, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of manganese in KMnO₄?", "choices": {"A": "+4", "B": "+5", "C": "+6", "D": "+7"}, "answer": "D"}, {"id": 125, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of phosphorus in H₃PO₄?", "choices": {"A": "+3", "B": "+5", "C": "-3", "D": "-5"}, "answer": "B"}, {"id": 126, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of carbon in CO₂?", "choices": {"A": "-2", "B": "+2", "C": "+4", "D": "-4"}, "answer": "C"}, {"id": 127, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of chlorine in HClO₃?", "choices": {"A": "+1", "B": "+3", "C": "+5", "D": "+7"}, "answer": "C"}, {"id": 128, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of nitrogen in NO₂?", "choices": {"A": "-4", "B": "-2", "C": "+2", "D": "+4"}, "answer": "D"}, {"id": 129, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of sulfur in Na₂SO₃?", "choices": {"A": "+2", "B": "+4", "C": "+6", "D": "-2"}, "answer": "B"}, {"id": 130, "topic": "Assigning Oxidation Numbers", "stem": "What is the oxidation number of iron in Fe₂O₃?", "choices": {"A": "+1", "B": "+2", "C": "+3", "D": "+6"}, "answer": "C"}, {"id": 131, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction 2Na(s) + Cl₂(g) → 2NaCl(s), which species is being reduced?", "choices": {"A": "Na", "B": "Cl₂", "C": "NaCl", "D": "Na⁺"}, "answer": "B"}, {"id": 132, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction 2Mg(s) + O₂(g) → 2MgO(s), which species is being oxidized?", "choices": {"A": "O₂", "B": "Mg", "C": "MgO", "D": "O²⁻"}, "answer": "B"}, {"id": 133, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction Zn(s) + Cu²⁺(aq) → Zn²⁺(aq) + Cu(s), which species is the reducing agent?", "choices": {"A": "Zn", "B": "Cu²⁺", "C": "Zn²⁺", "D": "Cu"}, "answer": "A"}, {"id": 134, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction Fe₂O₃(s) + 3CO(g) → 2Fe(s) + 3CO₂(g), which species is being reduced?", "choices": {"A": "CO", "B": "CO₂", "C": "Fe₂O₃", "D": "Fe"}, "answer": "C"}, {"id": 135, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction 2Al(s) + 3Cl₂(g) → 2AlCl₃(s), which species is the oxidizing agent?", "choices": {"A": "Al", "B": "Cl₂", "C": "AlCl₃", "D": "Al³⁺"}, "answer": "B"}, {"id": 136, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction Mg(s) + 2HCl(aq) → MgCl₂(aq) + H₂(g), the magnesium atom:", "choices": {"A": "Is reduced because it gains electrons", "B": "Is oxidized because it loses electrons", "C": "Is a spectator because it doesn't change charge", "D": "Is neither oxidized nor reduced"}, "answer": "B"}, {"id": 137, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction Cu(s) + 2Ag⁺(aq) → Cu²⁺(aq) + 2Ag(s), which species is being reduced?", "choices": {"A": "Cu", "B": "Ag⁺", "C": "Cu²⁺", "D": "Ag"}, "answer": "B"}, {"id": 138, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction 2Fe²⁺(aq) + Cl₂(g) → 2Fe³⁺(aq) + 2Cl⁻(aq), which species is oxidized?", "choices": {"A": "Cl₂", "B": "Cl⁻", "C": "Fe²⁺", "D": "Fe³⁺"}, "answer": "C"}, {"id": 139, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction 2Na(s) + 2H₂O(l) → 2NaOH(aq) + H₂(g), sodium is:", "choices": {"A": "Reduced, going from 0 to +1", "B": "Oxidized, going from 0 to +1", "C": "Reduced, going from +1 to 0", "D": "Neither oxidized nor reduced"}, "answer": "B"}, {"id": 140, "topic": "Identifying Oxidized and Reduced Species", "stem": "In the reaction Sn²⁺(aq) + 2Fe³⁺(aq) → Sn⁴⁺(aq) + 2Fe²⁺(aq), which species acts as the oxidizing agent?", "choices": {"A": "Sn²⁺", "B": "Sn⁴⁺", "C": "Fe³⁺", "D": "Fe²⁺"}, "answer": "C"}, {"id": 141, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. Which reaction will NOT occur?\n**Activity Series (most active → least active):** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Zn + CuSO₄ → ZnSO₄ + Cu", "B": "Fe + MgCl₂ → FeCl₂ + Mg", "C": "Mg + 2HCl → MgCl₂ + H₂", "D": "2Al + 3CuCl₂ → 2AlCl₃ + 3Cu"}, "answer": "B"}, {"id": 142, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. Which reaction will NOT occur?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Mg + ZnCl₂ → MgCl₂ + Zn", "B": "Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag", "C": "Fe + CuSO₄ → FeSO₄ + Cu", "D": "Ag + HCl → AgCl + H₂"}, "answer": "D"}, {"id": 143, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. Which reaction WILL occur?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Cu + ZnCl₂ → CuCl₂ + Zn", "B": "Ag + HCl → AgCl + H₂", "C": "Pb + FeCl₂ → PbCl₂ + Fe", "D": "Zn + 2HCl → ZnCl₂ + H₂"}, "answer": "D"}, {"id": 144, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. Which reaction will NOT occur?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Al + 3AgNO₃ → Al(NO₃)₃ + 3Ag", "B": "Zn + FeCl₂ → ZnCl₂ + Fe", "C": "Cu + 2HCl → CuCl₂ + H₂", "D": "Ni + CuSO₄ → NiSO₄ + Cu"}, "answer": "C"}, {"id": 145, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. Which reaction will NOT occur?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Sn + Pb(NO₃)₂ → Sn(NO₃)₂ + Pb", "B": "Zn + NiCl₂ → ZnCl₂ + Ni", "C": "Pb + ZnSO₄ → PbSO₄ + Zn", "D": "Fe + CuCl₂ → FeCl₂ + Cu"}, "answer": "C"}, {"id": 146, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. Which reaction WILL occur?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Au + HCl → AuCl₃ + H₂", "B": "Cu + FeSO₄ → CuSO₄ + Fe", "C": "Ag + Cu(NO₃)₂ → AgNO₃ + Cu", "D": "Al + 3HCl → AlCl₃ + H₂"}, "answer": "D"}, {"id": 147, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. Which reaction will NOT occur?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Mg + 2HCl → MgCl₂ + H₂", "B": "Fe + SnCl₂ → FeCl₂ + Sn", "C": "Ni + MgSO₄ → NiSO₄ + Mg", "D": "Zn + CuCl₂ → ZnCl₂ + Cu"}, "answer": "C"}, {"id": 148, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. Which reaction will NOT occur?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Al + FeCl₃ → AlCl₃ + Fe", "B": "Sn + CuSO₄ → SnSO₄ + Cu", "C": "Cu + SnCl₂ → CuCl₂ + Sn", "D": "Zn + Pb(NO₃)₂ → Zn(NO₃)₂ + Pb"}, "answer": "C"}, {"id": 149, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. A student places a piece of copper metal into a beaker of dilute hydrochloric acid. Based on the activity series, what will happen?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Copper dissolves and hydrogen gas is produced", "B": "Copper dissolves and chlorine gas is produced", "C": "No reaction occurs because copper is below hydrogen", "D": "Copper reacts slowly because it is close to hydrogen"}, "answer": "C"}, {"id": 150, "topic": "Activity Series: Will a Reaction Occur?", "stem": "Use the activity series below. Which reaction will NOT occur?\n**Activity Series:** Li > K > Ba > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > H₂ > Cu > Ag > Au", "choices": {"A": "Mg + FeSO₄ → MgSO₄ + Fe", "B": "2Al + 3CuCl₂ → 2AlCl₃ + 3Cu", "C": "Pb + 2HCl → PbCl₂ + H₂", "D": "Ag + Cu(NO₃)₂ → AgNO₃ + Cu"}, "answer": "D"}];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandomQuestions(bank, n) {
+  const k = Math.min(n, bank.length);
+  return shuffle(bank).slice(0, k);
+}
+
+function buildQuizQuestions() {
+  const picked = pickRandomQuestions(QUESTION_BANK, NUM_QUESTIONS);
+  return picked.map((q, idx) => {
+    const letters = ["A","B","C","D"];
+    const choicesArr = letters.map(L => ({ text: q.choices[L], isCorrect: L === q.answer }));
+    const shuffled = shuffle(choicesArr);
+    const newChoices = {};
+    let newCorrect = null;
+    shuffled.forEach((c, i) => {
+      const newL = letters[i];
+      newChoices[newL] = c.text;
+      if (c.isCorrect) newCorrect = newL;
+    });
+    return {
+      displayIndex: idx + 1,
+      bankId: q.id,
+      topic: q.topic,
+      stem: q.stem,
+      choices: newChoices,
+      correct: newCorrect,
+      selected: null,
+    };
+  });
+}
+
+let quiz = [];
+let timerInterval = null;
+let endTime = null;
+let submitted = false;
+let studentName = "";
+
+function renderQuestions() {
+  const c = document.getElementById("questionsContainer");
+  c.innerHTML = "";
+  quiz.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    card.id = "q-" + qi;
+    let html = '<div class="qhead">Question ' + q.displayIndex + ' of ' + NUM_QUESTIONS + '</div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      const id = "q" + qi + "_" + L;
+      html += '<label class="choice" data-q="' + qi + '" data-l="' + L + '">';
+      html += '<input type="radio" name="q' + qi + '" value="' + L + '" id="' + id + '"> ';
+      html += '<strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]);
+      html += '</label>';
+    });
+    card.innerHTML = html;
+    c.appendChild(card);
+  });
+  c.addEventListener("change", e => {
+    if (e.target && e.target.type === "radio") {
+      const qi = parseInt(e.target.name.slice(1), 10);
+      quiz[qi].selected = e.target.value;
+      const labels = document.querySelectorAll('label.choice[data-q="' + qi + '"]');
+      labels.forEach(lb => lb.classList.toggle("selected", lb.getAttribute("data-l") === e.target.value));
+    }
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function startTimer() {
+  endTime = Date.now() + TIME_LIMIT_SEC * 1000;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+}
+function updateTimer() {
+  const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById("timerTime").textContent =
+    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  const t = document.getElementById("timer");
+  t.classList.toggle("warning", remaining <= 300 && remaining > 60);
+  t.classList.toggle("critical", remaining <= 60);
+  if (remaining <= 0 && !submitted) {
+    clearInterval(timerInterval);
+    submitQuiz(true);
+  }
+}
+
+function submitQuiz(autoSubmitted) {
+  if (submitted) return;
+  const unanswered = quiz.filter(q => !q.selected).length;
+  if (!autoSubmitted && unanswered > 0) {
+    if (!confirm("You have " + unanswered + " unanswered question(s). Submit anyway?")) return;
+  }
+  submitted = true;
+  if (timerInterval) clearInterval(timerInterval);
+
+  let correct = 0;
+  quiz.forEach(q => { if (q.selected === q.correct) correct++; });
+  const total = quiz.length;
+  const pct = Math.round((correct / total) * 100);
+  const passed = pct >= PASS_PERCENT;
+
+  document.getElementById("screen-quiz").classList.add("hidden");
+  const rs = document.getElementById("screen-results");
+  rs.classList.remove("hidden");
+  document.getElementById("scoreDisplay").textContent = correct + "/" + total + "  (" + pct + "%)";
+  document.getElementById("scoreDisplay").className = "score " + (passed ? "pass" : "fail");
+  document.getElementById("passLabel").innerHTML = passed
+    ? '<strong style="color:var(--good);">PASS — meets 80% standard</strong>'
+    : '<strong style="color:var(--bad);">DID NOT PASS — complete remediation before retake</strong>';
+  document.getElementById("studentResultLabel").textContent =
+    studentName + (autoSubmitted ? " · auto-submitted (time expired)" : "");
+  const now = new Date();
+  const ts = now.toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+  document.getElementById("timestampLabel").textContent = "Completed: " + ts;
+
+  const rev = document.getElementById("reviewContainer");
+  rev.innerHTML = "<h2 style='margin-top:0;'>Question Review</h2>";
+  quiz.forEach((q) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    let html = '<div class="qhead">Q' + q.displayIndex + ' &middot; <span style="color:var(--muted);font-weight:400;">Topic: ' + escapeHtml(q.topic || "") + ' &middot; Bank #' + q.bankId + '</span></div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      let cls = "choice";
+      if (L === q.correct) cls += " correct";
+      if (L === q.selected && q.selected !== q.correct) cls += " incorrect";
+      let mark = "";
+      if (L === q.correct) mark = " ✓ correct";
+      if (L === q.selected && q.selected !== q.correct) mark = " ✗ your answer";
+      else if (L === q.selected && q.selected === q.correct) mark = " ✓ your answer";
+      html += '<div class="' + cls + '"><strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]) + '<em style="color:var(--muted);">' + mark + '</em></div>';
+    });
+    if (!q.selected) {
+      html += '<div style="color:var(--bad); font-size:13px; margin-top:6px;"><em>Not answered</em></div>';
+    }
+    card.innerHTML = html;
+    rev.appendChild(card);
+  });
+
+  window.scrollTo(0, 0);
+}
+
+document.getElementById("btnStart").addEventListener("click", () => {
+  const nm = document.getElementById("studentName").value.trim();
+  if (!nm) { alert("Please enter your full name."); return; }
+  studentName = nm;
+  document.getElementById("studentLabel").textContent = nm;
+  quiz = buildQuizQuestions();
+  document.getElementById("screen-start").classList.add("hidden");
+  document.getElementById("screen-quiz").classList.remove("hidden");
+  renderQuestions();
+  startTimer();
+  window.addEventListener("beforeunload", e => {
+    if (!submitted) { e.preventDefault(); e.returnValue = ""; }
+  });
+});
+document.getElementById("btnSubmit").addEventListener("click", () => submitQuiz(false));
+</script>
+</body>
+</html>
