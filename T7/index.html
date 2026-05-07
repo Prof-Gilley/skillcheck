@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CHEM 3A — Tier 7 Skill Check</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --accent: #2a5d8f;
+    --good: #1f7a3a;
+    --bad: #b22d2d;
+    --warn: #c46c00;
+    --border: #d9d9d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 24px 20px 80px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+  input[type="text"] {
+    width: 100%; font-size: 16px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff;
+  }
+  button {
+    background: var(--accent); color: white; border: none;
+    padding: 12px 20px; border-radius: 6px; font-size: 15px;
+    font-weight: 600; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { background: #999; cursor: not-allowed; }
+  button.success { background: var(--good); }
+  .timer {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600;
+  }
+  .timer.warning { background: #fff4e0; border-color: var(--warn); color: var(--warn); }
+  .timer.critical { background: #ffe5e5; border-color: var(--bad); color: var(--bad); }
+  .timer-time { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .qcard { margin-bottom: 14px; }
+  .qhead { font-weight: 700; margin-bottom: 8px; font-size: 15px; color: var(--accent); }
+  .qstem { white-space: pre-wrap; margin-bottom: 12px; font-size: 16px; }
+  .choice {
+    display: block; padding: 10px 12px; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; background: #fafaf7;
+    transition: background 0.1s;
+  }
+  .choice:hover { background: #eef2f7; }
+  .choice input { margin-right: 10px; }
+  .choice.selected { background: #dde9f5; border-color: var(--accent); }
+  .choice.correct { background: #def5e1; border-color: var(--good); }
+  .choice.incorrect { background: #f8d7d7; border-color: var(--bad); }
+  .results-summary {
+    background: #fff; border: 2px solid var(--accent);
+    border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .score { font-size: 42px; font-weight: 700; margin: 8px 0; }
+  .pass { color: var(--good); }
+  .fail { color: var(--bad); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .footer-note {
+    background: #fffce5; border-left: 4px solid var(--warn);
+    padding: 10px 14px; margin-top: 14px; font-size: 14px; border-radius: 4px;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="screen-start">
+    <h1>CHEM 3A — Tier 7 Skill Check</h1>
+    <div class="sub">Gases & Solutions · 15 questions · 30 minutes · 80% to pass</div>
+
+    <div class="card">
+      <p><strong>Instructions:</strong></p>
+      <ul>
+        <li>Closed-note assessment.</li>
+        <li>You have <strong>30 minutes</strong>. Timer auto-submits at zero.</li>
+        <li>Pick the best answer. You can change answers until you submit.</li>
+        <li>When done, click <strong>Submit</strong>, then take a screenshot of your score.</li>
+      </ul>
+      <label for="studentName">Your full name (required):</label>
+      <input id="studentName" type="text" placeholder="Last, First" autocomplete="name">
+      <div style="margin-top:14px;">
+        <button id="btnStart">Start Skill Check</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-quiz" class="hidden">
+    <div class="timer" id="timer">
+      <div>Skill Check in progress — <span id="studentLabel"></span></div>
+      <div class="timer-time" id="timerTime">30:00</div>
+    </div>
+    <div id="questionsContainer"></div>
+    <div class="actions">
+      <button id="btnSubmit" class="success">Submit Quiz</button>
+    </div>
+  </div>
+
+  <div id="screen-results" class="hidden">
+    <div class="results-summary">
+      <div style="font-size:14px; color:var(--muted); letter-spacing:0.5px;">CHEM 3A · TIER 7 SKILL CHECK</div>
+      <div class="score" id="scoreDisplay">--/15</div>
+      <div id="passLabel"></div>
+      <div id="studentResultLabel" style="margin-top:10px; font-size:18px; font-weight:600;"></div>
+      <div id="timestampLabel" style="margin-top:4px; color: var(--muted); font-size:13px;"></div>
+    </div>
+    <div class="footer-note" style="text-align:center;">
+      <strong>📸 Take a screenshot of this page</strong> and show it to Prof. Gilley before you leave.
+    </div>
+    <div id="reviewContainer" style="margin-top:24px;"></div>
+  </div>
+
+</div>
+
+<script>
+const QUIZ_TITLE = "CHEM 3A — Tier 7 Skill Check";
+const NUM_QUESTIONS = 15;
+const TIME_LIMIT_SEC = 30 * 60;
+const PASS_PERCENT = 80;
+
+const QUESTION_BANK = [{"id": 1, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "According to kinetic molecular theory, which statement correctly describes the behavior of gas molecules?", "choices": {"A": "Gas molecules have significant attractive forces between them", "B": "Gas molecules are in constant, random motion and undergo elastic collisions", "C": "Gas molecules occupy a volume equal to most of the container volume", "D": "Gas molecules move faster at lower temperatures"}, "answer": "B"}, {"id": 2, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "A gas sample is collected over water at 25°C. Which of the following best explains why the measured pressure is less than the applied pressure?", "choices": {"A": "The vapor pressure of water must be subtracted from total pressure", "B": "Water molecules evaporate and dilute the gas", "C": "Temperature decreases as water evaporates and exits the gas mixture", "D": "Gas molecules dissolve in the water layer"}, "answer": "A"}, {"id": 3, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Convert 2.50 atm to mmHg (1 atm = 760 mmHg)", "choices": {"A": "304 mmHg", "B": "1520 mmHg", "C": "1900 mmHg", "D": "3.29 mmHg"}, "answer": "C"}, {"id": 4, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Convert 1520 mmHg to atm (1 atm = 760 mmHg)", "choices": {"A": "0.500 atm", "B": "2.00 atm", "C": "1.52 atm", "D": "2.29 atm"}, "answer": "B"}, {"id": 5, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Convert 101.325 kPa to atm (1 atm = 101.325 kPa)", "choices": {"A": "0.500 atm", "B": "0.987 atm", "C": "1.00 atm", "D": "1.50 atm"}, "answer": "C"}, {"id": 6, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Convert 0.750 atm to kPa (1 atm = 101.325 kPa)", "choices": {"A": "75.9 kPa", "B": "76.0 kPa", "C": "75.99 kPa", "D": "101 kPa"}, "answer": "C"}, {"id": 7, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Pressure is defined as", "choices": {"A": "the volume of gas in a container", "B": "force per unit area", "C": "the number of gas molecules present", "D": "the temperature-dependent property of gases"}, "answer": "B"}, {"id": 8, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Which condition would most likely cause a real gas to deviate significantly from ideal behavior?", "choices": {"A": "High temperature and low pressure", "B": "Low temperature and low pressure", "C": "High temperature and high pressure", "D": "Low temperature and high pressure"}, "answer": "D"}, {"id": 9, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "At STP (0°C and 1 atm), which statement is true?", "choices": {"A": "Temperature is 25°C and pressure is 1 bar", "B": "Temperature is 273°C and pressure is 1 atm", "C": "Temperature is 0 K and pressure is 760 kPa", "D": "Temperature is 273 K and pressure is 1 atm"}, "answer": "D"}, {"id": 10, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "A gas sample is at 25°C and 1.00 atm. If the sample is cooled to 0°C at constant volume, which occurs?", "choices": {"A": "Pressure decreases", "B": "Pressure increases", "C": "Pressure remains constant", "D": "Pressure becomes zero"}, "answer": "A"}, {"id": 11, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Which postulate of kinetic molecular theory explains why gases exert pressure on container walls?", "choices": {"A": "Gas molecules have negligible volume compared to the container", "B": "Gas molecules undergo elastic collisions with container walls", "C": "Gas molecules undergo elastic collisions with each other", "D": "Gas molecules move in random directions at constant speed"}, "answer": "B"}, {"id": 12, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Convert 2.50 atm to torr (1 atm = 760 torr)", "choices": {"A": "0.00329 torr", "B": "304 torr", "C": "3.29 torr", "D": "1900 torr"}, "answer": "D"}, {"id": 13, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "At very high pressures, real gases deviate from ideal behavior because", "choices": {"A": "intermolecular attractive forces become significant and molecular volume matters", "B": "kinetic energy of molecules increases significantly", "C": "temperature of the gas increases above the critical point of the substance", "D": "molecules escape from the container"}, "answer": "A"}, {"id": 14, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "A gas mixture contains N₂, O₂, and Ar. According to kinetic molecular theory, which molecules have the greatest average kinetic energy at the same temperature?", "choices": {"A": "N₂ molecules only", "B": "O₂ molecules only", "C": "All have the same average kinetic energy", "D": "Ar atoms only, since they are the heaviest particles"}, "answer": "C"}, {"id": 15, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Which statement correctly describes molecular motion in gases according to kinetic molecular theory?", "choices": {"A": "Molecules move in ordered, straight paths", "B": "Heavier molecules move faster than lighter molecules at the same temperature", "C": "Molecules only move when the temperature is above room temperature", "D": "Molecules move randomly and frequently collide with each other and container walls"}, "answer": "D"}, {"id": 16, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Convert 3.50 atm to kPa (1 atm = 101.325 kPa)", "choices": {"A": "282 kPa", "B": "289 kPa", "C": "514 kPa", "D": "354 kPa"}, "answer": "D"}, {"id": 17, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "A sample of gas at 20°C has a pressure of 0.950 atm. What is the pressure in mmHg?", "choices": {"A": "722 mmHg", "B": "0.00125 mmHg", "C": "1.25 mmHg", "D": "1310 mmHg"}, "answer": "A"}, {"id": 18, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "According to kinetic molecular theory, when a gas is heated at constant volume, molecular speed increases and", "choices": {"A": "pressure increases", "B": "pressure decreases", "C": "pressure remains unchanged", "D": "volume increases"}, "answer": "A"}, {"id": 19, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Which condition represents STP (standard temperature and pressure)?", "choices": {"A": "25°C and 1 atm", "B": "0°C and 1 atm", "C": "0 K and 0 atm", "D": "25 K and 760 kPa"}, "answer": "B"}, {"id": 20, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "The most probable reason that real gases behave ideally at low pressures and high temperatures is that", "choices": {"A": "molecular collisions occur more frequently", "B": "molecular kinetic energy becomes zero at standard temperature and pressure", "C": "intermolecular forces become negligible and molecular volume is insignificant", "D": "pressure and temperature become proportional"}, "answer": "C"}, {"id": 21, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "A barometer reads 753 mmHg at a location. Express this pressure in atm (1 atm = 760 mmHg)", "choices": {"A": "0.753 atm", "B": "0.991 atm", "C": "1.00 atm", "D": "1.01 atm"}, "answer": "B"}, {"id": 22, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Convert 500. torr to atm (1 atm = 760 torr)", "choices": {"A": "0.263 atm", "B": "3.80 atm", "C": "1.52 atm", "D": "0.658 atm"}, "answer": "D"}, {"id": 23, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Which observation best supports kinetic molecular theory?", "choices": {"A": "Gases can be compressed more easily than liquids", "B": "Gas density is always 1 g/L regardless of pressure or temperature applied", "C": "Gases are colorless and have no visible properties", "D": "Gas molecules in a container exert equal pressure on all walls"}, "answer": "D"}, {"id": 24, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "A 2.0 L flask contains a gas at 1.2 atm. The same amount of gas in a 4.0 L flask at the same temperature will have a pressure of", "choices": {"A": "0.60 atm", "B": "0.30 atm", "C": "1.2 atm", "D": "2.4 atm"}, "answer": "A"}, {"id": 25, "topic": "KINETIC MOLECULAR THEORY & PRESSURE", "stem": "Convert 1.25 atm to both mmHg and kPa (1 atm = 760 mmHg; 1 atm = 101.325 kPa)", "choices": {"A": "1900 mmHg and 202.7 kPa", "B": "608 mmHg and 81.06 kPa", "C": "950 mmHg and 126.7 kPa", "D": "1.25 mmHg and 1.25 kPa"}, "answer": "C"}, {"id": 26, "topic": "SIMPLE GAS LAWS", "stem": "A gas sample has a volume of 2.50 L at 1.00 atm. If the pressure is increased to 2.50 atm at constant temperature, what is the new volume? (Use Boyle's Law: P₁V₁ = P₂V₂)", "choices": {"A": "0.100 L", "B": "0.625 L", "C": "6.25 L", "D": "1.00 L"}, "answer": "D"}, {"id": 27, "topic": "SIMPLE GAS LAWS", "stem": "A gas at 300. K occupies 1.50 L. If the temperature is increased to 450. K at constant pressure, what is the new volume? (Use Charles's Law: V₁/T₁ = V₂/T₂)", "choices": {"A": "1.00 L", "B": "1.50 L", "C": "2.25 L", "D": "2.00 L"}, "answer": "C"}, {"id": 28, "topic": "SIMPLE GAS LAWS", "stem": "A gas sample is at 25°C and 1.00 atm. What will the pressure be if the temperature is increased to 75°C at constant volume? (Use Gay-Lussac's Law: P₁/T₁ = P₂/T₂. CRITICAL: Use Kelvin!)", "choices": {"A": "1.00 atm", "B": "1.17 atm", "C": "1.33 atm", "D": "3.00 atm"}, "answer": "B"}, {"id": 29, "topic": "SIMPLE GAS LAWS", "stem": "A balloon contains 5.00 L of air at 20°C. If the balloon is placed in a freezer at -20°C, what is the new volume at constant pressure? (Use Charles's Law; convert to Kelvin)", "choices": {"A": "2.50 L", "B": "4.32 L", "C": "5.00 L", "D": "5.43 L"}, "answer": "B"}, {"id": 30, "topic": "SIMPLE GAS LAWS", "stem": "A gas at 2.00 atm and 500. K is cooled to 250. K at constant volume. What is the final pressure? (Use Gay-Lussac's Law)", "choices": {"A": "0.500 atm", "B": "2.00 atm", "C": "1.00 atm", "D": "4.00 atm"}, "answer": "C"}, {"id": 31, "topic": "SIMPLE GAS LAWS", "stem": "Which gas law describes the relationship between pressure and volume at constant temperature?", "choices": {"A": "Charles's Law", "B": "Boyle's Law", "C": "Gay-Lussac's Law", "D": "Avogadro's Law"}, "answer": "B"}, {"id": 32, "topic": "SIMPLE GAS LAWS", "stem": "A gas has a volume of 3.00 L at 1.50 atm and 300. K. If the volume is changed to 6.00 L and the temperature to 600. K, what is the new pressure? (Use Combined Gas Law: P₁V₁/T₁ = P₂V₂/T₂)", "choices": {"A": "1.50 atm", "B": "0.750 atm", "C": "3.00 atm", "D": "6.00 atm"}, "answer": "A"}, {"id": 33, "topic": "SIMPLE GAS LAWS", "stem": "A gas sample at 25°C has a volume of 4.00 L at 0.800 atm. What volume will it occupy at 50°C if the pressure is reduced to 0.400 atm? (Use Combined Gas Law; convert to Kelvin)", "choices": {"A": "4.00 L", "B": "6.48 L", "C": "8.00 L", "D": "16.0 L"}, "answer": "C"}, {"id": 34, "topic": "SIMPLE GAS LAWS", "stem": "Charles's Law requires temperature to be measured in", "choices": {"A": "Kelvin (K)", "B": "degrees Celsius (°C)", "C": "degrees Fahrenheit (°F)", "D": "any unit, as long as it is consistent"}, "answer": "A"}, {"id": 35, "topic": "SIMPLE GAS LAWS", "stem": "A rigid container holds a gas at 27°C and 3.00 atm. If the temperature increases to 177°C, what is the new pressure? (Gay-Lussac's Law; convert to Kelvin)", "choices": {"A": "1.50 atm", "B": "3.00 atm", "C": "6.00 atm", "D": "5.00 atm"}, "answer": "D"}, {"id": 36, "topic": "SIMPLE GAS LAWS", "stem": "A gas at 1.00 atm occupies 10.0 L at constant temperature. If the volume is decreased to 5.00 L, the new pressure is (Boyle's Law)", "choices": {"A": "2.00 atm", "B": "1.00 atm", "C": "0.500 atm", "D": "5.00 atm"}, "answer": "A"}, {"id": 37, "topic": "SIMPLE GAS LAWS", "stem": "A gas sample at 0°C has a volume of 2.00 L. At what temperature (in Kelvin) will the volume double if the pressure remains constant? (Charles's Law)", "choices": {"A": "273 K", "B": "400 K", "C": "819 K", "D": "546 K"}, "answer": "D"}, {"id": 38, "topic": "SIMPLE GAS LAWS", "stem": "Which statement is a correct application of Charles's Law?", "choices": {"A": "At constant pressure, V₁/T₂ = V₂/T₁", "B": "At constant pressure, V₁/T₁ = V₂/T₂", "C": "At constant temperature, P₁V₁ = P₂V₂", "D": "At constant volume, P₁T₂ = P₂T₁"}, "answer": "B"}, {"id": 39, "topic": "SIMPLE GAS LAWS", "stem": "A gas is heated from 50°C to 100°C at constant volume. The pressure increases from 1.00 atm to approximately", "choices": {"A": "1.15 atm", "B": "1.33 atm", "C": "1.50 atm", "D": "2.00 atm"}, "answer": "A"}, {"id": 40, "topic": "SIMPLE GAS LAWS", "stem": "A syringe contains 50.0 mL of gas at 1.00 atm. If the plunger is pushed to reduce the volume to 25.0 mL at constant temperature, the new pressure is (Boyle's Law)", "choices": {"A": "0.50 atm", "B": "1.00 atm", "C": "2.00 atm", "D": "4.00 atm"}, "answer": "C"}, {"id": 41, "topic": "SIMPLE GAS LAWS", "stem": "A gas at 400. K and 2.00 atm is cooled to 200. K at constant volume. The final pressure is (Gay-Lussac's Law)", "choices": {"A": "0.50 atm", "B": "4.00 atm", "C": "2.00 atm", "D": "1.00 atm"}, "answer": "D"}, {"id": 42, "topic": "SIMPLE GAS LAWS", "stem": "The volume of a gas increases from 250. mL to 750. mL while the pressure decreases. Which gas law best explains this?", "choices": {"A": "Charles's Law", "B": "Boyle's Law", "C": "Gay-Lussac's Law", "D": "Combined Gas Law"}, "answer": "B"}, {"id": 43, "topic": "SIMPLE GAS LAWS", "stem": "A balloon is filled at 20°C. At what Celsius temperature will the volume increase by 50%? (Charles's Law; assume constant pressure)", "choices": {"A": "167°C", "B": "150°C", "C": "70°C", "D": "220°C"}, "answer": "A"}, {"id": 44, "topic": "SIMPLE GAS LAWS", "stem": "Using the Combined Gas Law, a gas at P₁ = 1.50 atm, V₁ = 2.00 L, T₁ = 300. K is compressed to V₂ = 1.00 L at T₂ = 450. K. Find P₂.", "choices": {"A": "4.50 atm", "B": "2.25 atm", "C": "1.50 atm", "D": "6.75 atm"}, "answer": "A"}, {"id": 45, "topic": "SIMPLE GAS LAWS", "stem": "A gas sample doubles in volume while the temperature remains constant. According to Boyle's Law, the pressure", "choices": {"A": "doubles", "B": "is cut in half", "C": "remains the same", "D": "quadruples"}, "answer": "B"}, {"id": 46, "topic": "SIMPLE GAS LAWS", "stem": "At constant pressure, if the absolute temperature of a gas increases by a factor of 2, the volume increases by a factor of (Charles's Law)", "choices": {"A": "0.5", "B": "1", "C": "2", "D": "4"}, "answer": "C"}, {"id": 47, "topic": "SIMPLE GAS LAWS", "stem": "A gas at 100. K and 5.00 atm is warmed to 400. K at constant volume. The final pressure is (Gay-Lussac's Law)", "choices": {"A": "20.0 atm", "B": "5.00 atm", "C": "10.0 atm", "D": "1.25 atm"}, "answer": "A"}, {"id": 48, "topic": "SIMPLE GAS LAWS", "stem": "A sample of nitrogen gas occupies 8.00 L at 0.500 atm and 100. K. Using the Combined Gas Law, what volume will it occupy at 1.50 atm and 300. K?", "choices": {"A": "2.67 L", "B": "4.00 L", "C": "8.00 L", "D": "16.0 L"}, "answer": "C"}, {"id": 49, "topic": "SIMPLE GAS LAWS", "stem": "CRITICAL: A gas is initially at 25°C. If the temperature is increased to 35°C (both in Celsius), the pressure ratio P₂/P₁ at constant volume is approximately (Gay-Lussac's Law)", "choices": {"A": "0.965", "B": "1.40", "C": "1.25", "D": "1.03"}, "answer": "D"}, {"id": 50, "topic": "SIMPLE GAS LAWS", "stem": "The combined gas law can be written as P₁V₁/T₁ = P₂V₂/T₂. If two of the three initial conditions (P₁, V₁, T₁) double and one condition remains constant, which final condition must change?", "choices": {"A": "Only one final condition changes", "B": "All three final conditions change", "C": "None of the final conditions change", "D": "Depends on which conditions double"}, "answer": "D"}, {"id": 51, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "Using the ideal gas law (PV = nRT, R = 0.0821 L·atm/mol·K), calculate the number of moles of gas in a 2.00 L container at 1.00 atm and 273 K.", "choices": {"A": "0.0821 mol", "B": "9.19 mol", "C": "0.0893 mol", "D": "18.4 mol"}, "answer": "C"}, {"id": 52, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "At STP (0°C and 1 atm), the molar volume of an ideal gas is", "choices": {"A": "11.2 L/mol", "B": "44.8 L/mol", "C": "22.4 L/mol", "D": "100 L/mol"}, "answer": "C"}, {"id": 53, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "How many moles of O₂ are contained in a 5.00 L sample at 25°C and 1.20 atm? (Use PV = nRT, R = 0.0821 L·atm/mol·K)", "choices": {"A": "0.245 mol", "B": "0.195 mol", "C": "0.390 mol", "D": "0.601 mol"}, "answer": "A"}, {"id": 54, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "What is the pressure of 0.500 mol of N₂ gas in a 2.00 L container at 300. K? (Use PV = nRT)", "choices": {"A": "0.614 atm", "B": "122 atm", "C": "61.4 atm", "D": "6.14 atm"}, "answer": "D"}, {"id": 55, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "The volume occupied by 2.00 mol of an ideal gas at 1.00 atm and 273 K is (Use PV = nRT)", "choices": {"A": "22.4 L", "B": "44.8 L", "C": "112 L", "D": "224 L"}, "answer": "B"}, {"id": 56, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "A sample of 3.00 mol of He gas at 25°C exerts what pressure in a 5.00 L container? (PV = nRT; convert to Kelvin)", "choices": {"A": "44.8 atm", "B": "18.4 atm", "C": "22.1 atm", "D": "14.7 atm"}, "answer": "D"}, {"id": 57, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "Dalton's Law of Partial Pressures states that the total pressure of a gas mixture equals", "choices": {"A": "the pressure of the dominant gas only", "B": "the average of all partial pressures of the gases involved", "C": "the product of all partial pressures", "D": "the sum of the partial pressures of individual gases"}, "answer": "D"}, {"id": 58, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "A mixture contains 0.500 mol of N₂ and 1.50 mol of O₂ in a 10.0 L container at 25°C. What is the partial pressure of N₂? (PV = nRT; convert to Kelvin)", "choices": {"A": "1.22 atm", "B": "1.83 atm", "C": "2.46 atm", "D": "3.67 atm"}, "answer": "A"}, {"id": 59, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "In a gas mixture, N₂ has a partial pressure of 0.600 atm and O₂ has a partial pressure of 0.200 atm. If Ar has a partial pressure of 0.100 atm, the total pressure is", "choices": {"A": "0.100 atm", "B": "0.900 atm", "C": "0.600 atm", "D": "1.80 atm"}, "answer": "B"}, {"id": 60, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "Calculate the mole fraction of O₂ in a mixture where P(O₂) = 0.400 atm and P(total) = 2.00 atm", "choices": {"A": "0.100", "B": "0.500", "C": "0.400", "D": "0.200"}, "answer": "D"}, {"id": 61, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "A gas mixture has a total pressure of 3.00 atm. If the mole fraction of CO₂ is 0.250, the partial pressure of CO₂ is", "choices": {"A": "0.250 atm", "B": "0.750 atm", "C": "1.50 atm", "D": "3.00 atm"}, "answer": "B"}, {"id": 62, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "How many moles of gas are in a 10.0 L sample at 2.00 atm and 400. K? (PV = nRT)", "choices": {"A": "0.410 mol", "B": "2.44 mol", "C": "0.614 mol", "D": "4.88 mol"}, "answer": "C"}, {"id": 63, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "The density of a gas can be calculated using d = PM/RT, where M is molar mass. What is the density of CO₂ at 1.00 atm and 273 K? (M(CO₂) = 44.0 g/mol)", "choices": {"A": "1.12 g/L", "B": "1.96 g/L", "C": "3.50 g/L", "D": "44.0 g/L"}, "answer": "B"}, {"id": 64, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "A 1.00 L sample of gas mixture contains He and Ne with a total pressure of 2.00 atm at 300. K. If the mole fraction of He is 0.600, the partial pressure of Ne is", "choices": {"A": "0.400 atm", "B": "0.800 atm", "C": "0.600 atm", "D": "1.20 atm"}, "answer": "B"}, {"id": 65, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "Using the ideal gas law, what volume does 5.00 mol of NH₃ occupy at 750. mmHg and 25°C? (Convert mmHg to atm; convert to Kelvin)", "choices": {"A": "61.5 L", "B": "102 L", "C": "122 L", "D": "244 L"}, "answer": "C"}, {"id": 66, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "A mixture of gases contains Ar with a partial pressure of 0.500 atm. If the total pressure is 2.50 atm, the mole fraction of Ar is", "choices": {"A": "0.100", "B": "0.500", "C": "0.200", "D": "2.50"}, "answer": "C"}, {"id": 67, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "At STP, what is the molar volume of an ideal gas?", "choices": {"A": "22.4 L/mol", "B": "11.2 L/mol", "C": "44.8 L/mol", "D": "100 L/mol"}, "answer": "A"}, {"id": 68, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "Calculate the density of O₂ gas at 1.50 atm and 300. K using d = PM/RT. (M(O₂) = 32.0 g/mol)", "choices": {"A": "1.47 g/L", "B": "3.50 g/L", "C": "2.13 g/L", "D": "1.95 g/L"}, "answer": "D"}, {"id": 69, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "A gas sample is collected over water at 25°C and 750. mmHg. The vapor pressure of water at 25°C is 23.8 mmHg. The partial pressure of the dry gas is", "choices": {"A": "726.2 mmHg", "B": "23.8 mmHg", "C": "750.0 mmHg", "D": "773.8 mmHg"}, "answer": "A"}, {"id": 70, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "In a mixture of H₂ and Cl₂, the partial pressure of H₂ is 0.300 atm and the total pressure is 0.800 atm. What is the partial pressure of Cl₂?", "choices": {"A": "0.200 atm", "B": "0.500 atm", "C": "0.300 atm", "D": "0.800 atm"}, "answer": "B"}, {"id": 71, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "Using the ideal gas law, how many moles of Ar gas are in a 3.00 L container at 1.50 atm and 27°C? (Convert to Kelvin)", "choices": {"A": "0.183 mol", "B": "0.275 mol", "C": "0.550 mol", "D": "1.10 mol"}, "answer": "A"}, {"id": 72, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "At 1.00 atm and 298 K, what volume is occupied by 12.0 mol of an ideal gas? (PV = nRT)", "choices": {"A": "294 L", "B": "134 L", "C": "268 L", "D": "44.8 L"}, "answer": "A"}, {"id": 73, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "A gas mixture at 1.00 atm total pressure contains three gases. If two gases have partial pressures of 0.350 atm and 0.250 atm, the partial pressure of the third gas is", "choices": {"A": "0.100 atm", "B": "0.400 atm", "C": "0.600 atm", "D": "0.750 atm"}, "answer": "B"}, {"id": 74, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "Calculate the molar mass of a gas if 2.50 g occupies 1.85 L at 1.00 atm and 300. K. (Rearrange PV = nRT to solve for molar mass)", "choices": {"A": "22.2 g/mol", "B": "44.0 g/mol", "C": "33.3 g/mol", "D": "74.0 g/mol"}, "answer": "C"}, {"id": 75, "topic": "IDEAL GAS LAW & DALTON'S LAW", "stem": "A sample contains 0.750 mol of Ne in a 5.00 L container at 400. K. Calculate the pressure exerted. (PV = nRT)", "choices": {"A": "19.7 atm", "B": "4.93 atm", "C": "9.86 atm", "D": "2.47 atm"}, "answer": "D"}, {"id": 76, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "Molarity is defined as the number of moles of solute per", "choices": {"A": "gram of solvent", "B": "kilogram of solvent", "C": "liter of solution", "D": "liter of solvent"}, "answer": "C"}, {"id": 77, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "How many moles of NaCl are dissolved in 500. mL of a 2.00 M solution?", "choices": {"A": "0.250 mol", "B": "0.500 mol", "C": "2.00 mol", "D": "1.00 mol"}, "answer": "D"}, {"id": 78, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "What is the molarity of a solution containing 10.0 g of NaCl dissolved in enough water to make 250. mL of solution? (M(NaCl) = 58.5 g/mol; convert mL to L!)", "choices": {"A": "0.171 M", "B": "0.685 M", "C": "1.37 M", "D": "2.74 M"}, "answer": "B"}, {"id": 79, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "How many grams of KOH are needed to prepare 500. mL of a 1.50 M solution? (M(KOH) = 56.1 g/mol)", "choices": {"A": "14.0 g", "B": "42.1 g", "C": "28.1 g", "D": "84.2 g"}, "answer": "B"}, {"id": 80, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "Calculate the percent w/v (weight/volume) of 15.0 g of glucose dissolved in 300. mL of solution", "choices": {"A": "2.00%", "B": "50.0%", "C": "15.0%", "D": "5.00%"}, "answer": "D"}, {"id": 81, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "A 25.0% w/v solution contains how many grams of solute per 100. mL of solution?", "choices": {"A": "2.50 g", "B": "12.5 g", "C": "25.0 g", "D": "100 g"}, "answer": "C"}, {"id": 82, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "Calculate percent m/m (mass/mass) for 20.0 g of NaCl dissolved in 180. g of water", "choices": {"A": "10.0%", "B": "11.1%", "C": "20.0%", "D": "90.0%"}, "answer": "B"}, {"id": 83, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "How many moles of solute are in 250. mL of a 3.00 M solution? (CRITICAL: Convert mL to L!)", "choices": {"A": "0.750 mol", "B": "0.500 mol", "C": "0.300 mol", "D": "1.20 mol"}, "answer": "A"}, {"id": 84, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "What volume of a 2.50 M stock solution is needed to prepare 100. mL of a 0.500 M solution?", "choices": {"A": "10.0 mL", "B": "50.0 mL", "C": "40.0 mL", "D": "20.0 mL"}, "answer": "D"}, {"id": 85, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "A solution contains 45.0 g of sucrose in 250. mL of solution. What is the molarity? (M(sucrose) = 342 g/mol)", "choices": {"A": "0.526 M", "B": "0.132 M", "C": "1.05 M", "D": "1.80 M"}, "answer": "A"}, {"id": 86, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "The solvent in a solution is the substance present in the", "choices": {"A": "smallest amount by mass", "B": "gaseous state", "C": "same amount as the solute", "D": "largest amount by mass or volume"}, "answer": "D"}, {"id": 87, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "A 35.0% w/v solution contains 35.0 g of solute in", "choices": {"A": "35.0 mL of solution", "B": "65.0 mL of solution", "C": "100. mL of solution", "D": "135 mL of solution"}, "answer": "C"}, {"id": 88, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "How many grams of H₂SO₄ are needed to make 750. mL of a 0.500 M solution? (M(H₂SO₄) = 98.1 g/mol)", "choices": {"A": "36.8 g", "B": "24.5 g", "C": "12.3 g", "D": "73.6 g"}, "answer": "A"}, {"id": 89, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "What is the molarity of a 5.00 ppm NaCl solution? (Assume solution density = 1.00 g/mL; M(NaCl) = 58.5 g/mol)", "choices": {"A": "0.0000855 M", "B": "0.00855 M", "C": "0.0855 M", "D": "8.55 × 10⁻⁵ M"}, "answer": "D"}, {"id": 90, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "A solution contains 12.0 g of CaCl₂ in 200. mL of solution. Calculate the molarity. (M(CaCl₂) = 111 g/mol)", "choices": {"A": "0.0545 M", "B": "0.273 M", "C": "0.545 M", "D": "1.09 M"}, "answer": "C"}, {"id": 91, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "How many grams of solute are in 25.0 mL of a 1.20 M HCl solution? (M(HCl) = 36.5 g/mol; convert mL to L!)", "choices": {"A": "1.09 g", "B": "0.735 g", "C": "0.300 g", "D": "2.19 g"}, "answer": "A"}, {"id": 92, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "A 15.0% m/m solution means that every", "choices": {"A": "15.0 g of solute is dissolved in 100. g of solvent", "B": "15.0 g of solute is dissolved in 100. g of solution", "C": "15.0 g of solute is contained in 100. g of solution", "D": "15.0 mL of solute is dissolved in 100. mL of solution"}, "answer": "C"}, {"id": 93, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "Calculate the volume of 2.00 M NaOH needed to prepare 500. mL of a 0.400 M solution", "choices": {"A": "300. mL", "B": "200. mL", "C": "100. mL", "D": "400. mL"}, "answer": "C"}, {"id": 94, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "What is the percent w/v of a solution containing 50.0 g of NaCl in 500. mL of solution?", "choices": {"A": "5.00%", "B": "50.0%", "C": "25.0%", "D": "10.0%"}, "answer": "D"}, {"id": 95, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "A solution is prepared by dissolving 30.0 g of CuSO₄ in enough water to make 2.00 L of solution. What is the molarity? (M(CuSO₄) = 160 g/mol)", "choices": {"A": "0.0938 M", "B": "0.150 M", "C": "0.188 M", "D": "0.300 M"}, "answer": "A"}, {"id": 96, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "How many milliliters of a 6.00 M solution are needed to prepare 250. mL of a 1.50 M solution?", "choices": {"A": "37.5 mL", "B": "62.5 mL", "C": "100. mL", "D": "167 mL"}, "answer": "B"}, {"id": 97, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "A solution contains 0.500 mol of glucose in 500. mL of solution. The molarity is", "choices": {"A": "0.250 M", "B": "0.500 M", "C": "2.00 M", "D": "1.00 M"}, "answer": "D"}, {"id": 98, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "Calculate percent m/m for a solution prepared by dissolving 25.0 g of KNO₃ in 175 g of water", "choices": {"A": "12.5%", "B": "14.3%", "C": "25.0%", "D": "87.5%"}, "answer": "B"}, {"id": 99, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "What is the molarity of a solution that contains 5.00 mol of solute in 2.50 L of solution?", "choices": {"A": "0.500 M", "B": "2.00 M", "C": "1.00 M", "D": "5.00 M"}, "answer": "B"}, {"id": 100, "topic": "MOLARITY, PERCENT CONCENTRATION, & SOLUTION PREPARATION", "stem": "How many grams of glucose are needed to prepare 100. mL of a 2.50 M solution? (M(glucose) = 180 g/mol)", "choices": {"A": "45.0 g", "B": "22.5 g", "C": "90.0 g", "D": "180 g"}, "answer": "A"}, {"id": 101, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "The dilution formula M₁V₁ = M₂V₂ is valid when diluting a stock solution because", "choices": {"A": "the molarity increases proportionally to volume", "B": "the density changes predictably", "C": "the solvent evaporates", "D": "the number of moles of solute remains constant"}, "answer": "D"}, {"id": 102, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "A 3.00 M HCl solution is diluted from 50.0 mL to 200. mL. What is the final molarity? (M₁V₁ = M₂V₂)", "choices": {"A": "0.375 M", "B": "0.750 M", "C": "1.50 M", "D": "3.00 M"}, "answer": "A"}, {"id": 103, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "What volume of a 12.0 M H₂SO₄ stock solution is needed to prepare 500. mL of a 2.00 M solution?", "choices": {"A": "41.7 mL", "B": "333 mL", "C": "167 mL", "D": "83.3 mL"}, "answer": "D"}, {"id": 104, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "A 0.500 M NaCl solution (100. mL) is diluted to 400. mL. Calculate the new molarity.", "choices": {"A": "0.0625 M", "B": "0.250 M", "C": "0.125 M", "D": "0.500 M"}, "answer": "C"}, {"id": 105, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "In a titration, 25.0 mL of 0.100 M NaOH is required to neutralize 50.0 mL of HCl. The molarity of HCl is (the balanced equation is HCl + NaOH → NaCl + H₂O)", "choices": {"A": "0.0500 M", "B": "0.0250 M", "C": "0.100 M", "D": "0.200 M"}, "answer": "A"}, {"id": 106, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "CRITICAL: In molarity calculations with dilution, if you forget to convert mL to L, the result will be", "choices": {"A": "correct", "B": "only slightly inaccurate", "C": "off by a factor of 10", "D": "off by a factor of 1000"}, "answer": "D"}, {"id": 107, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "In a titration of H₂SO₄ with NaOH, the balanced equation is H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O. If 20.0 mL of 1.00 M H₂SO₄ is titrated with NaOH, the moles of NaOH needed is", "choices": {"A": "0.0200 mol", "B": "0.100 mol", "C": "0.0400 mol", "D": "0.200 mol"}, "answer": "C"}, {"id": 108, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "A student dilutes 10.0 mL of 2.50 M KNO₃ to 50.0 mL. The final molarity is", "choices": {"A": "1.00 M", "B": "0.500 M", "C": "1.25 M", "D": "2.50 M"}, "answer": "B"}, {"id": 109, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "In a titration, 30.0 mL of 0.200 M Ba(OH)₂ is used to neutralize 25.0 mL of HNO₃. Using the balanced equation Ba(OH)₂ + 2HNO₃ → Ba(NO₃)₂ + 2H₂O, the molarity of HNO₃ is", "choices": {"A": "0.150 M", "B": "0.240 M", "C": "0.480 M", "D": "0.800 M"}, "answer": "C"}, {"id": 110, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "A solution is diluted from 100. mL to 250. mL, and the molarity decreases from 0.800 M to", "choices": {"A": "0.200 M", "B": "0.320 M", "C": "0.533 M", "D": "0.800 M"}, "answer": "B"}, {"id": 111, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "In acid-base titration, the equivalence point is reached when", "choices": {"A": "the color indicator changes", "B": "the concentration becomes zero", "C": "the volume of acid equals the volume of base", "D": "moles of acid equal moles of base"}, "answer": "D"}, {"id": 112, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "A serial dilution starts with 1.00 M stock solution. After the first dilution (10:1), the concentration is 0.100 M. After the second 10:1 dilution, the concentration is", "choices": {"A": "0.100 M", "B": "0.0500 M", "C": "0.0100 M", "D": "0.200 M"}, "answer": "C"}, {"id": 113, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "In a titration, 15.0 mL of 0.500 M NaOH neutralizes 30.0 mL of HCl (HCl + NaOH → NaCl + H₂O). The molarity of HCl is", "choices": {"A": "0.250 M", "B": "0.0625 M", "C": "0.500 M", "D": "1.00 M"}, "answer": "A"}, {"id": 114, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "A 250. mL portion of 0.600 M KOH is diluted to 1.00 L. Calculate the new molarity.", "choices": {"A": "0.150 M", "B": "0.0600 M", "C": "0.300 M", "D": "0.600 M"}, "answer": "A"}, {"id": 115, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "For the titration H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O, 40.0 mL of 0.500 M NaOH is used. How many moles of H₂SO₄ were titrated?", "choices": {"A": "0.0100 mol", "B": "0.0200 mol", "C": "0.0400 mol", "D": "0.0800 mol"}, "answer": "A"}, {"id": 116, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "Diluting a solution decreases the", "choices": {"A": "total moles of solute", "B": "density significantly", "C": "molarity", "D": "molar mass"}, "answer": "C"}, {"id": 117, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "In a titration, the substance added from a buret to reach the endpoint is called the", "choices": {"A": "analyte", "B": "indicator", "C": "solution", "D": "titrant"}, "answer": "D"}, {"id": 118, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "A student prepares a serial dilution: 1.00 M → 0.100 M → 0.0100 M → 0.00100 M. How many 10-fold dilutions were performed?", "choices": {"A": "3", "B": "2", "C": "1", "D": "4"}, "answer": "A"}, {"id": 119, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "In a titration of an unknown acid with 0.150 M NaOH, 25.0 mL of NaOH is required to neutralize 20.0 mL of the acid (1:1 ratio). The molarity of the acid is", "choices": {"A": "0.100 M", "B": "0.125 M", "C": "0.300 M", "D": "0.188 M"}, "answer": "D"}, {"id": 120, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "For dilution, if the initial volume is 20.0 mL at 5.00 M and the final volume is 100. mL, the final molarity is", "choices": {"A": "0.500 M", "B": "0.700 M", "C": "1.00 M", "D": "5.00 M"}, "answer": "C"}, {"id": 121, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "In a titration, 35.0 mL of 0.200 M H₂SO₄ is neutralized by NaOH (H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O). The moles of NaOH required is", "choices": {"A": "0.0070 mol", "B": "0.0140 mol", "C": "0.0350 mol", "D": "0.0700 mol"}, "answer": "B"}, {"id": 122, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "A solution with molarity M is diluted to half its concentration. The volume must be", "choices": {"A": "halved", "B": "doubled", "C": "quadrupled", "D": "remain the same"}, "answer": "B"}, {"id": 123, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "Calculate the molarity of the acid if 20.0 mL of 1.00 M NaOH neutralizes 15.0 mL of H₂SO₄ (H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O)", "choices": {"A": "0.333 M", "B": "1.00 M", "C": "0.667 M", "D": "1.33 M"}, "answer": "C"}, {"id": 124, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "In solution stoichiometry, the volume of solution must be converted to", "choices": {"A": "milliliters", "B": "liters", "C": "grams", "D": "moles directly"}, "answer": "B"}, {"id": 125, "topic": "DILUTION & SOLUTION STOICHIOMETRY", "stem": "A titration requires 40.0 mL of 0.300 M HCl to neutralize 20.0 mL of NaOH (HCl + NaOH → NaCl + H₂O). The molarity of NaOH is", "choices": {"A": "0.150 M", "B": "0.600 M", "C": "0.300 M", "D": "1.20 M"}, "answer": "B"}, {"id": 126, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "The principle \"like dissolves like\" suggests that", "choices": {"A": "polar solvents dissolve polar solutes best", "B": "nonpolar solvents dissolve polar solutes best", "C": "polar solvents dissolve nonpolar solutes best", "D": "all solvents dissolve all solutes equally"}, "answer": "A"}, {"id": 127, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Which compound is most likely to be soluble in water?", "choices": {"A": "CCl₄ (nonpolar)", "B": "NaCl (ionic)", "C": "CH₄ (nonpolar)", "D": "I₂ (nonpolar)"}, "answer": "B"}, {"id": 128, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Osmosis is the movement of", "choices": {"A": "solute from high to low concentration", "B": "solute from low to high concentration", "C": "solvent from low to high solute concentration", "D": "solvent from high to high solute concentration"}, "answer": "C"}, {"id": 129, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "A hypertonic solution causes a cell to", "choices": {"A": "shrink", "B": "swell and burst", "C": "remain unchanged", "D": "dissolve"}, "answer": "A"}, {"id": 130, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "A hypotonic solution causes a cell to", "choices": {"A": "swell and possibly burst", "B": "shrink", "C": "remain unchanged", "D": "dissolve immediately"}, "answer": "A"}, {"id": 131, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "An isotonic solution has a solute concentration that is", "choices": {"A": "higher than the cell interior", "B": "lower than the cell interior", "C": "zero", "D": "equal to the cell interior"}, "answer": "D"}, {"id": 132, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Freezing point depression occurs because dissolved particles", "choices": {"A": "increase the melting point by stabilizing crystal formation", "B": "lower the freezing point by disrupting formation of a crystalline solid", "C": "prevent water from freezing by binding to crystal surface sites", "D": "increase the boiling point of the solvent above its normal value"}, "answer": "B"}, {"id": 133, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "For colligative properties, the van't Hoff factor (i) for NaCl in solution is approximately", "choices": {"A": "2", "B": "1", "C": "3", "D": "4"}, "answer": "A"}, {"id": 134, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "For colligative properties, the van't Hoff factor for CaCl₂ is approximately", "choices": {"A": "1", "B": "2", "C": "4", "D": "3"}, "answer": "D"}, {"id": 135, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "The van't Hoff factor for a nonelectrolyte like glucose is", "choices": {"A": "greater than 3", "B": "2", "C": "3", "D": "1"}, "answer": "D"}, {"id": 136, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Which compound would be most soluble in hexane (a nonpolar solvent)?", "choices": {"A": "NaCl", "B": "KBr (a soluble ionic compound)", "C": "C₆H₁₄ (nonpolar)", "D": "HCl"}, "answer": "C"}, {"id": 137, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Boiling point elevation is directly proportional to", "choices": {"A": "the vapor pressure of solvent", "B": "the temperature of the solvent during dissolution", "C": "the number of dissolved particles (molality)", "D": "the solvent's molecular weight"}, "answer": "C"}, {"id": 138, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "In a red blood cell placed in a hypertonic solution, water moves", "choices": {"A": "into the cell", "B": "in and out equally", "C": "neither in nor out", "D": "out of the cell"}, "answer": "D"}, {"id": 139, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "A 1 M solution of NaCl produces a freezing point depression approximately", "choices": {"A": "equal to a 1 M glucose solution", "B": "half that of a 1 M glucose solution", "C": "twice that of a 1 M glucose solution", "D": "four times that of a 1 M glucose solution"}, "answer": "C"}, {"id": 140, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Diffusion is the movement of particles", "choices": {"A": "from high concentration to low concentration", "B": "from low concentration to high concentration", "C": "across a semipermeable membrane only", "D": "against a concentration gradient"}, "answer": "A"}, {"id": 141, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Which solution would have the lowest freezing point?", "choices": {"A": "0.100 M NaCl", "B": "0.100 M CaCl₂", "C": "0.100 M glucose", "D": "0.100 M glucose (same as C)"}, "answer": "B"}, {"id": 142, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "A cell placed in an isotonic solution will", "choices": {"A": "swell", "B": "maintain its shape and size", "C": "shrink", "D": "eventually dissolve"}, "answer": "B"}, {"id": 143, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Electrolytes in solution", "choices": {"A": "always completely dissociate into ions regardless of solute concentration", "B": "never dissociate regardless of how much water is added", "C": "dissociate partially or completely into ions and affect colligative properties", "D": "increase the boiling point but not the freezing point"}, "answer": "C"}, {"id": 144, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Which substance would increase the boiling point of water the most when dissolved?", "choices": {"A": "0.050 mol CaCl₂ (i = 3)", "B": "0.050 mol NaCl (i = 2)", "C": "0.050 mol glucose (i = 1)", "D": "All increase equally"}, "answer": "A"}, {"id": 145, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Osmotic pressure is related to", "choices": {"A": "the type of solute only, regardless of how much is dissolved", "B": "the polarity of the solvent", "C": "the number of dissolved particles (solute concentration)", "D": "the density of the solution"}, "answer": "C"}, {"id": 146, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "In salt water, salt is the", "choices": {"A": "solvent", "B": "hydrate", "C": "precipitate", "D": "solute"}, "answer": "D"}, {"id": 147, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "A solution with a pH of 7 is neutral, but its osmotic pressure depends on", "choices": {"A": "its pH only, regardless of dissolved particle count", "B": "the temperature only", "C": "the concentration and type of dissolved particles", "D": "the molarity of H⁺ ions only"}, "answer": "C"}, {"id": 148, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Which solution is hypertonic relative to pure water?", "choices": {"A": "Pure water", "B": "A solution containing dissolved salt", "C": "A solution with zero molarity", "D": "Distilled water"}, "answer": "B"}, {"id": 149, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Colligative properties depend on", "choices": {"A": "the identity of the solute", "B": "the charge of the solute", "C": "the molar mass of the solute", "D": "the number of dissolved particles"}, "answer": "D"}, {"id": 150, "topic": "SOLUBILITY, COLLIGATIVE PROPERTIES, & TONICITY", "stem": "Red blood cells are typically maintained in a 0.9% NaCl (saline) solution because it is", "choices": {"A": "hypertonic and causes the cell to shrink", "B": "isotonic with the cell interior and maintains the cell's shape", "C": "hypotonic and causes the cell to swell", "D": "a solution that prevents osmosis from occurring across membranes"}, "answer": "B"}];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandomQuestions(bank, n) {
+  const k = Math.min(n, bank.length);
+  return shuffle(bank).slice(0, k);
+}
+
+function buildQuizQuestions() {
+  const picked = pickRandomQuestions(QUESTION_BANK, NUM_QUESTIONS);
+  return picked.map((q, idx) => {
+    const letters = ["A","B","C","D"];
+    const choicesArr = letters.map(L => ({ text: q.choices[L], isCorrect: L === q.answer }));
+    const shuffled = shuffle(choicesArr);
+    const newChoices = {};
+    let newCorrect = null;
+    shuffled.forEach((c, i) => {
+      const newL = letters[i];
+      newChoices[newL] = c.text;
+      if (c.isCorrect) newCorrect = newL;
+    });
+    return {
+      displayIndex: idx + 1,
+      bankId: q.id,
+      topic: q.topic,
+      stem: q.stem,
+      choices: newChoices,
+      correct: newCorrect,
+      selected: null,
+    };
+  });
+}
+
+let quiz = [];
+let timerInterval = null;
+let endTime = null;
+let submitted = false;
+let studentName = "";
+
+function renderQuestions() {
+  const c = document.getElementById("questionsContainer");
+  c.innerHTML = "";
+  quiz.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    card.id = "q-" + qi;
+    let html = '<div class="qhead">Question ' + q.displayIndex + ' of ' + NUM_QUESTIONS + '</div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      const id = "q" + qi + "_" + L;
+      html += '<label class="choice" data-q="' + qi + '" data-l="' + L + '">';
+      html += '<input type="radio" name="q' + qi + '" value="' + L + '" id="' + id + '"> ';
+      html += '<strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]);
+      html += '</label>';
+    });
+    card.innerHTML = html;
+    c.appendChild(card);
+  });
+  c.addEventListener("change", e => {
+    if (e.target && e.target.type === "radio") {
+      const qi = parseInt(e.target.name.slice(1), 10);
+      quiz[qi].selected = e.target.value;
+      const labels = document.querySelectorAll('label.choice[data-q="' + qi + '"]');
+      labels.forEach(lb => lb.classList.toggle("selected", lb.getAttribute("data-l") === e.target.value));
+    }
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function startTimer() {
+  endTime = Date.now() + TIME_LIMIT_SEC * 1000;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+}
+function updateTimer() {
+  const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById("timerTime").textContent =
+    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  const t = document.getElementById("timer");
+  t.classList.toggle("warning", remaining <= 300 && remaining > 60);
+  t.classList.toggle("critical", remaining <= 60);
+  if (remaining <= 0 && !submitted) {
+    clearInterval(timerInterval);
+    submitQuiz(true);
+  }
+}
+
+function submitQuiz(autoSubmitted) {
+  if (submitted) return;
+  const unanswered = quiz.filter(q => !q.selected).length;
+  if (!autoSubmitted && unanswered > 0) {
+    if (!confirm("You have " + unanswered + " unanswered question(s). Submit anyway?")) return;
+  }
+  submitted = true;
+  if (timerInterval) clearInterval(timerInterval);
+
+  let correct = 0;
+  quiz.forEach(q => { if (q.selected === q.correct) correct++; });
+  const total = quiz.length;
+  const pct = Math.round((correct / total) * 100);
+  const passed = pct >= PASS_PERCENT;
+
+  document.getElementById("screen-quiz").classList.add("hidden");
+  const rs = document.getElementById("screen-results");
+  rs.classList.remove("hidden");
+  document.getElementById("scoreDisplay").textContent = correct + "/" + total + "  (" + pct + "%)";
+  document.getElementById("scoreDisplay").className = "score " + (passed ? "pass" : "fail");
+  document.getElementById("passLabel").innerHTML = passed
+    ? '<strong style="color:var(--good);">PASS — meets 80% standard</strong>'
+    : '<strong style="color:var(--bad);">DID NOT PASS — complete remediation before retake</strong>';
+  document.getElementById("studentResultLabel").textContent =
+    studentName + (autoSubmitted ? " · auto-submitted (time expired)" : "");
+  const now = new Date();
+  const ts = now.toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+  document.getElementById("timestampLabel").textContent = "Completed: " + ts;
+
+  const rev = document.getElementById("reviewContainer");
+  rev.innerHTML = "<h2 style='margin-top:0;'>Question Review</h2>";
+  quiz.forEach((q) => {
+    const card = document.createElement("div");
+    card.className = "card qcard";
+    let html = '<div class="qhead">Q' + q.displayIndex + ' &middot; <span style="color:var(--muted);font-weight:400;">Topic: ' + escapeHtml(q.topic || "") + ' &middot; Bank #' + q.bankId + '</span></div>';
+    html += '<div class="qstem">' + escapeHtml(q.stem) + '</div>';
+    ["A","B","C","D"].forEach(L => {
+      let cls = "choice";
+      if (L === q.correct) cls += " correct";
+      if (L === q.selected && q.selected !== q.correct) cls += " incorrect";
+      let mark = "";
+      if (L === q.correct) mark = " ✓ correct";
+      if (L === q.selected && q.selected !== q.correct) mark = " ✗ your answer";
+      else if (L === q.selected && q.selected === q.correct) mark = " ✓ your answer";
+      html += '<div class="' + cls + '"><strong>' + L + '.</strong> ' + escapeHtml(q.choices[L]) + '<em style="color:var(--muted);">' + mark + '</em></div>';
+    });
+    if (!q.selected) {
+      html += '<div style="color:var(--bad); font-size:13px; margin-top:6px;"><em>Not answered</em></div>';
+    }
+    card.innerHTML = html;
+    rev.appendChild(card);
+  });
+
+  window.scrollTo(0, 0);
+}
+
+document.getElementById("btnStart").addEventListener("click", () => {
+  const nm = document.getElementById("studentName").value.trim();
+  if (!nm) { alert("Please enter your full name."); return; }
+  studentName = nm;
+  document.getElementById("studentLabel").textContent = nm;
+  quiz = buildQuizQuestions();
+  document.getElementById("screen-start").classList.add("hidden");
+  document.getElementById("screen-quiz").classList.remove("hidden");
+  renderQuestions();
+  startTimer();
+  window.addEventListener("beforeunload", e => {
+    if (!submitted) { e.preventDefault(); e.returnValue = ""; }
+  });
+});
+document.getElementById("btnSubmit").addEventListener("click", () => submitQuiz(false));
+</script>
+</body>
+</html>
